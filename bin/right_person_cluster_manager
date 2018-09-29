@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Utility functions for managing the right person cluster
+"""
+import argparse
+import os
+
+import ujson
+
+import subprocess
+
+from right_person.data_mining.cluster.utils import CLUSTER_DIR, TERRAFORM_VARS, get_terraform_vars, \
+    run_system_shell_process
+
+BUILD_AMI_FUNCTION = """
+packer build
+-var 'region={region}'
+-var 'subnet_id={subnet}'
+-var 'playbook_file={playbook_file}'
+-var 'ami_name=RIGHT_PERSON_SPARK_NODE'
+{packer_file}"""
+
+
+def build_ami():
+    """Build a machine image for a right_person spark node"""
+    terraform_vars = get_terraform_vars()
+    region, subnet_id = terraform_vars['region'], terraform_vars['subnet_id']
+    playbook_file = os.path.join(CLUSTER_DIR, 'ansible', 'right_person_node.yml')
+    packer_file = os.path.join(CLUSTER_DIR, 'packer', 'ami_builder.json')
+    return run_system_shell_process(str(BUILD_AMI_FUNCTION.format(
+        region=region, subnet=subnet_id, playbook_file=playbook_file, packer_file=packer_file
+    )))
+
+
+def vars_file_is_valid(f):
+    """Check if a file is a valid terraform vars file"""
+    try:
+        ujson.load(open(f))
+        return True
+    except (Exception, ):  # todo: add terraform validate call
+        return False
+
+
+def edit_cluster_settings():
+    """
+    edit the terraform variables file
+    """
+    temp_file = TERRAFORM_VARS + '.tmp'
+    with open(TERRAFORM_VARS) as initial, open(temp_file, 'w') as copy:
+        copy.writelines(initial.readlines())
+    retry = True
+    while retry:
+        try:
+            subprocess.call(['nano', temp_file])
+        except (Exception, ):
+            'Cannot Load file for editing: no editor found: {}'.format(TERRAFORM_VARS)
+            break
+        if vars_file_is_valid(temp_file):
+            break
+        else:
+            retry_input = raw_input("The file is not valid. Would you like to retry? ")
+            options = {'yes': True, 'no': False}
+            while retry_input not in options:
+                retry_input = raw_input("please type yes or no: ")
+            retry = options[retry_input]
+    with open(TERRAFORM_VARS, 'w') as initial, open(temp_file) as copy:
+        initial.writelines(copy.readlines())
+    os.remove(temp_file)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="""Manages the right_person cluster""")
+    parser.add_argument('-e', '--edit-vars', action='store_true', default=False)
+    parser.add_argument('-a', '--build-ami', action='store_true', default=False)
+    args = parser.parse_args()
+    if args.edit_vars:
+        edit_cluster_settings()
+    if args.build_ami:
+        build_ami()

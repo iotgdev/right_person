@@ -1,0 +1,60 @@
+---
+- block:
+  - name: Install system packages
+    apt:
+      pkg: "{{ item }}"
+      state: present
+      cache_valid_time: 86400
+    with_items:
+      - htop
+      - python-pip
+      - ntp
+      - pkg-config
+      - rsyslog
+      - strace
+      - tcl
+      - unzip
+      - openjdk-8-jdk
+
+  - name: Update pip, wheel, setuptools
+    pip:
+      name: "{{ item }}"
+      state: present
+      extra_args: --upgrade --extra-index-url=https://iotec:J787893hjkee,ubj@pypi.dsp.io/
+    with_items:
+      - pip
+      - wheel
+      - setuptools
+      - ujson
+      - numpy
+      - sklearn
+      - mmh3
+      - right_person
+  become: yes
+
+
+- block:
+  - name: Make a spark home directory
+    file:
+      path: /home/ubuntu/spark/
+      state: directory
+
+  - name: Unarchive Spark
+    unarchive:
+      src: http://www.mirrorservice.org/sites/ftp.apache.org/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz
+      dest: /home/ubuntu/spark/
+      remote_src: yes
+      extra_opts: [--strip-components=1]
+
+
+- block:  # todo: work out if i need this
+  - name: add the jar references to spark
+    template:
+      src: spark-defaults.conf
+      dest: /home/ubuntu/spark/conf/
+
+- block:
+  - name: create a directory to use for spark storage on disk
+    file:
+      path: /mnt/
+      state: directory
