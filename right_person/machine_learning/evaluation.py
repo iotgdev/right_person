@@ -3,6 +3,7 @@
 """
 functions to evaluate machine learning models
 """
+from __future__ import unicode_literals
 
 
 from numpy import log, mean

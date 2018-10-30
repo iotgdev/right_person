@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """connection functions for right_person"""
+from __future__ import unicode_literals
 
 
 import boto3

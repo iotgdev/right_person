@@ -20,3 +20,11 @@ Accessing a cluster is easy with right person:
 ## Models
 The right profile models are Logistic regression models. 
 The models are serializable and are stored on s3.
+
+# TODOs:
+- tests
+- 2to3
+- documentation
+- hosting the package
+- review of the cross validation
+- more things that i've forgotten

@@ -13,6 +13,7 @@ Usage:
 >>> with get_spark_cluster_session('cluster-id') as session:
 ...:    miner.run(session)
 """
+from __future__ import unicode_literals
 import datetime
 import os
 import ujson

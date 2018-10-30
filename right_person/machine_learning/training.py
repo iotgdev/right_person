@@ -3,6 +3,9 @@
 """
 Functions to train (start to finish, including cross validation) right person models
 """
+from __future__ import unicode_literals
+
+
 from right_person.machine_learning.cross_validation import get_optimised_model
 from right_person.data_mining.profiles.transformations import filter_profiles, sample_profiles, map_profiles, \
     count_profiles

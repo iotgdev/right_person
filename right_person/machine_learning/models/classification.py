@@ -5,6 +5,7 @@ Provides an interface to convert profile(s) to data
 that can be used to train machine learning.
 No direct usage is expected.
 """
+from __future__ import unicode_literals
 import mmh3
 from collections import Counter
 from scipy.sparse import coo_matrix

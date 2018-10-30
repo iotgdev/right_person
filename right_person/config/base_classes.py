@@ -8,6 +8,7 @@ Base classes for RightPerson configs.
 
 No direct usage is expected.
 """
+from __future__ import unicode_literals
 
 
 class AttributeCleaningMetaclass(type):

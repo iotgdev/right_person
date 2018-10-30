@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Models for right_person
+"""
+from __future__ import unicode_literals
 from collections import Counter
 
 import datetime

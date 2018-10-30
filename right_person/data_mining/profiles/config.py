@@ -9,6 +9,7 @@ The configs contain information required to run a right_person job.
 
 These objects should only be used by a RightPersonTrainingJob
 """
+from __future__ import unicode_literals
 
 
 from collections import Counter

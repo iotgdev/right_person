@@ -9,6 +9,7 @@ config contains information about good and normal data signatures as well as the
 
 These classes should only be used by the RightPersonModel class
 """
+from __future__ import unicode_literals
 
 from right_person.config.base_classes import AttributeCleaningMetaclass
 
