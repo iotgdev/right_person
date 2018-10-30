@@ -1,14 +1,22 @@
-# Right Profile
+# Right Person
 iotec Machine learning with profile based classification
 profiles can be thought of as amalgamated data with a common trait, defining the data amalgamation
 
-# Models
-Thr right profile models are Logistic regression models that absorb data from profiles 
-as collections of sparse hashes and then evaluate those hashes to determine the quality of the profile.
+## Data Mining
+Right person relies on data mining to build it's input datasets. 
+The data mining is powered by spark.
+The spark cluster is configurable using the deployable scripts:
+```console
+$ right_person_cluster_manager --edit-vars --build-ami
+// This will allow an update of the variables script and allow the user to build an ami for right person.
+```
+Accessing a cluster is easy with right person:
+```python
+>>> from right_person.data_mining.cluster.context_managers import get_spark_cluster_session
+>>> with get_spark_cluster_session('cluster-id') as session:
+...:    # do work using the session
+```
 
-# Right Profile Jobs
-The right person jobs are capable of creating large datasets, training over large datasets or defining models in paralell.
-The jobs can define for each model a particular good set of profile ids, needed to identify good behaviour from normal.
-The jobs can be used to create profile data from other data sources
-The jobs can be used to train many models in parallel from the large profile datasets
-since the spark jobs 
+## Models
+The right profile models are Logistic regression models. 
+The models are serializable and are stored on s3.

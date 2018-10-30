@@ -1,1 +1,1 @@
-recursive-include right_person/cluster/spark *
+recursive-include right_person/cluster *
