@@ -3,15 +3,20 @@
 """
 Utility functions for managing the right person cluster
 """
+from __future__ import unicode_literals
+
 import argparse
 import os
-
-import ujson
+import shutil
+import tempfile
 
 import subprocess
 
-from right_person.data_mining.cluster.utils import CLUSTER_DIR, TERRAFORM_VARS, get_terraform_vars, \
-    run_system_shell_process
+import ujson
+
+from right_person.data_mining.cluster.utils import CLUSTER_DIR, TERRAFORM_VARS, TERRAFORM_DIRECTORY, \
+    get_terraform_vars, run_system_shell_process
+
 
 BUILD_AMI_FUNCTION = """
 packer build
@@ -22,6 +27,27 @@ packer build
 {packer_file}"""
 
 
+_TERRAFORM_INIT_FUNCTION = """
+terraform init
+-backend-config 'bucket={cluster_state_bucket}'
+-backend-config 'region={cluster_region}'
+-backend-config 'key={cluster_region}/right_person/{cluster_id}/tf.state'
+-input=false
+-no-color
+-upgrade
+-from-module={input_location}
+-var-file={vars_file}
+{terraform_state_location}
+"""
+
+
+TERRAFORM_VALIDATE = """
+terraform validate
+-no-color
+{terraform_dir}
+"""
+
+
 def build_ami():
     """Build a machine image for a right_person spark node"""
     terraform_vars = get_terraform_vars()
@@ -30,16 +56,11 @@ def build_ami():
     packer_file = os.path.join(CLUSTER_DIR, 'packer', 'ami_builder.json')
     return run_system_shell_process(str(BUILD_AMI_FUNCTION.format(
         region=region, subnet=subnet_id, playbook_file=playbook_file, packer_file=packer_file
-    )))
+    ).replace('\n', ' ').strip()))
 
 
-def vars_file_is_valid(f):
-    """Check if a file is a valid terraform vars file"""
-    try:
-        ujson.load(open(f))
-        return True
-    except (Exception, ):  # todo: add terraform validate call
-        return False
+def terraform_validate():
+    """validate the terraform running """
 
 
 def edit_cluster_settings():
@@ -47,26 +68,53 @@ def edit_cluster_settings():
     edit the terraform variables file
     """
     temp_file = TERRAFORM_VARS + '.tmp'
+    terraform_state_location = tempfile.mkdtemp()
+
     with open(TERRAFORM_VARS) as initial, open(temp_file, 'w') as copy:
         copy.writelines(initial.readlines())
+
     retry = True
     while retry:
+
         try:
-            subprocess.call(['nano', temp_file])
+            try:
+                subprocess.call(['nano', temp_file])
+                print('validating...')
+                terraform_vars = ujson.load(open(temp_file))
+                state_s3_path, region = terraform_vars['cluster_state_bucket'], terraform_vars['cluster_region']
+
+                run_system_shell_process(str(_TERRAFORM_INIT_FUNCTION.format(
+                    cluster_state_bucket=state_s3_path, cluster_region=region, cluster_id='right_person_cluster_test',
+                    input_location=TERRAFORM_DIRECTORY, terraform_state_location=terraform_state_location,
+                    vars_file=temp_file
+                ).replace('\n', ' ').strip()))
+
+                run_system_shell_process(
+                    str(TERRAFORM_VALIDATE.format(terraform_dir=TERRAFORM_DIRECTORY).replace('\n', ' ').strip()))
+
+            except OSError:
+                print('Cannot Load file for editing: no editor found: {}'.format(TERRAFORM_VARS))
+                raise
+            except (ValueError, TypeError):
+                print('The file is not valid json!')
+                raise
+            except RuntimeError as e:
+                print('The terraform is not valid!\n{}'.format(e.message))
+                raise
+            else:
+                with open(TERRAFORM_VARS, 'w') as initial, open(temp_file) as copy:
+                    initial.writelines(copy.readlines())
+
         except (Exception, ):
-            'Cannot Load file for editing: no editor found: {}'.format(TERRAFORM_VARS)
-            break
-        if vars_file_is_valid(temp_file):
-            break
-        else:
-            retry_input = raw_input("The file is not valid. Would you like to retry? ")
+            retry_input = raw_input("Would you like to retry? ")
             options = {'yes': True, 'no': False}
             while retry_input not in options:
                 retry_input = raw_input("please type yes or no: ")
             retry = options[retry_input]
-    with open(TERRAFORM_VARS, 'w') as initial, open(temp_file) as copy:
-        initial.writelines(copy.readlines())
-    os.remove(temp_file)
+        finally:
+            if not retry:
+                os.remove(temp_file)
+                shutil.rmtree(terraform_state_location)
 
 
 if __name__ == '__main__':
