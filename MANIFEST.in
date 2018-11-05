@@ -1,1 +1,3 @@
-recursive-include right_person/cluster *
+recursive-include right_person/data_mining/cluster *
+include version.py
+include LICENSE
