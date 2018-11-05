@@ -34,6 +34,15 @@
 
 
 - block:
+  - name: add /mnt/ directory
+    file:
+      path: /mnt/
+      owner: ubuntu
+      group: ubuntu
+      state: directory
+
+
+- block:
   - name: Make a spark home directory
     file:
       path: /home/ubuntu/spark/

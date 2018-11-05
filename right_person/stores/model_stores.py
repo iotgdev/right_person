@@ -55,7 +55,6 @@ class S3RightPersonModelStore(object):
     CLASSIFIER_PARAMS = 'CLASSIFIER_PARAMS'
     USER_IDS = 'GOOD_USER_IDS'
     TRAINING_WEIGHTS = 'TRAINING_WEIGHTS'
-    PREDICTION_WEIGHTS = 'PREDICTION_WEIGHTS'
 
     def __init__(self, s3_bucket, s3_prefix, model_class):
         self.s3_bucket = s3_bucket
@@ -79,17 +78,14 @@ class S3RightPersonModelStore(object):
         classifier_params = self._get_json(model_prefix, self.CLASSIFIER_PARAMS)
         good_user_ids = self._get_json(model_prefix, self.USER_IDS)
         training_weights = self._get_json(model_prefix, self.TRAINING_WEIGHTS)
-        prediction_weights = self._get_json(model_prefix, self.PREDICTION_WEIGHTS)
 
         serialized_params = {
             'name': model_params['name'],
             'config': model_params['config'],
             'good_users': good_user_ids,
             'coef': training_weights,
-            'weights': prediction_weights,
             'l2reg': classifier_params['l2regularisation'],
             'warm_start': classifier_params['enable_incremental_building'],
-            'good_count': classifier_params['good_count'],
             'segment_size': classifier_params['segment_size'],
             'num_features': classifier_params['num_features']
         }
@@ -147,11 +143,9 @@ class S3RightPersonModelStore(object):
         }
         profile_data = serialized_model['good_users']
         training_weights = serialized_model['coef']
-        prediction_weights = serialized_model['weights']
         classifier_data = {
             'l2regularisation': serialized_model['l2reg'],
             'enable_incremental_building': serialized_model['warm_start'],
-            'good_count': serialized_model['good_count'],
             'segment_size': serialized_model['segment_size'],
             'num_features': serialized_model['num_features'],
         }
@@ -160,7 +154,6 @@ class S3RightPersonModelStore(object):
         self._set_json(model_prefix, self.USER_IDS, profile_data)
         self._set_json(model_prefix, self.CLASSIFIER_PARAMS, classifier_data)
         self._set_json(model_prefix, self.TRAINING_WEIGHTS, training_weights)
-        self._set_json(model_prefix, self.PREDICTION_WEIGHTS, prediction_weights)
 
         self._create_key(self.metadata_prefix + ID_DELIMITER.join((model.index, model.version)))
 

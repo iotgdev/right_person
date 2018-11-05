@@ -2,6 +2,27 @@
 # -*- coding: utf-8 -*-
 """
 Utility functions for interfacing with a right person spark cluster.
+
+SparkPackageManager:
+- holds a dictionary of packages added to the spark context dynamically. Removes them on process finish
+
+get_current_ipv4:
+- gets the current public ipv4 of an instance
+
+run_system_shell_process:
+- runs a process, recording the stdout and stderr
+
+get_terraform_vars:
+- gets the current right_person terraform variables as a python dict
+
+add_package_to_spark:
+- adds an imported package to spark for use by the worker nodes.
+- creates a tar file containing the package contents
+- must be "pure python" (contain no other language dependencies)
+
+get_spark_s3_files:
+- get file addresses that spark can process (files marked with the s3a protocol)
+
 No direct usage is expected.
 """
 from __future__ import unicode_literals
@@ -71,7 +92,7 @@ def get_terraform_vars():
     return ujson.load(open(TERRAFORM_VARS))
 
 
-def add_package_to_spark(session, package):
+def add_package_to_spark(session, package):  # update to get sdist to include other packages
     """
     adds a python package to the spark context by package import
     :type session: pyspark.SparkSession

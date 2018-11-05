@@ -2,23 +2,27 @@
 # -*- coding: utf-8 -*-
 """
 Models for right_person
+
+Usage:
+>>> model = RightPersonModel('test')
+>>> model.partial_fit([{'test': 1}], [1])
+>>> model.predict({'test': 1})
+1
 """
 from __future__ import unicode_literals
-from collections import Counter
 
 import datetime
+from collections import Counter
+
 import numpy
-import ujson
 from numpy import log
 from pyspark.mllib.classification import LogisticRegressionModel
 from pyspark.mllib.linalg import SparseVector
 from sklearn.linear_model import LogisticRegression
 
-
-from right_person.machine_learning.models.config import RightPersonModelConfig
-from right_person.machine_learning.models.classification import get_right_person_vector, HASH_SIZE
 from right_person.machine_learning.models.classification import combine_vectors
-
+from right_person.machine_learning.models.classification import get_right_person_vector, HASH_SIZE
+from right_person.machine_learning.models.config import RightPersonModelConfig
 
 MAX_TRAINING_SET_SIZE = 100000
 ID_DELIMITER = ':'
@@ -33,7 +37,7 @@ class RightPersonModel(object):
         self.version = None
 
         self.classifier = LogisticRegression(C=1, fit_intercept=False, penalty='l2')
-        self.predictor = LogisticRegressionModel([], 0, HASH_SIZE, 2)
+        self._predictor = LogisticRegressionModel([], 0, HASH_SIZE, 2)
 
         self.config = RightPersonModelConfig([], [], 10.0)
 
@@ -73,7 +77,7 @@ class RightPersonModel(object):
         :return: probability of good
         """
         vector = get_right_person_vector(profile)
-        return self.predictor.predict(SparseVector(self.predictor.numFeatures, sorted(vector), [1] * len(vector)))
+        return self._predictor.predict(SparseVector(self._predictor.numFeatures, sorted(vector), [1] * len(vector)))
 
     def serialize(self):
         """Serializes a machine_learning into a format for storage"""
@@ -81,39 +85,37 @@ class RightPersonModel(object):
             'name': self.name,
             'config': self.config,
             'good_users': self.good_users,
-            'good_count': self.good_count,
             'segment_size': self.segment_size,
 
             'l2reg': self.classifier.C,
             'coef': self.classifier.coef_.tolist(),
             'warm_start': self.classifier.warm_start,
 
-            'weights': self.predictor.weights.tolist(),
-            'num_features': self.predictor.numFeatures,
+            'num_features': self._predictor.numFeatures,
         }
 
-    def deserialize(self, config, good_users, good_count, segment_size, l2reg, coef, warm_start, weights, num_features):
+    def deserialize(self, config, good_users, segment_size, l2reg, coef, warm_start, num_features):
         """
         Deserialize a machine_learning for storage
+
         :type config: dict
         :type good_users: list
-        :type good_count: int
         :type segment_size: int
         :type l2reg: float
         :type coef: list[list[float]]
         :type warm_start: bool
-        :type weights: list[float]
         :type num_features: int
         """
         self.config = RightPersonModelConfig(**config)
         self.good_users = set(good_users)
-        self.good_count = good_count
+        self.good_count = len(self.good_users)
         self.segment_size = segment_size
 
         self.classifier = LogisticRegression(warm_start=warm_start, penalty='l2', fit_intercept=False, C=l2reg)
         self.classifier.coef_ = numpy.array(coef)
-        predict_params = {'weights': weights, 'intercept': self.intercept, 'numFeatures': num_features, 'numClasses': 2}
-        self.predictor = LogisticRegressionModel(**predict_params)
+
+        self._predictor = LogisticRegressionModel(
+            weights=self.classifier.coef_.tolist(), intercept=self.intercept, numFeatures=num_features, numClasses=2)
 
     def partial_fit(self, profiles, labels):
         """
@@ -124,8 +126,9 @@ class RightPersonModel(object):
         vectors = map(get_right_person_vector, profiles)
         matrix = combine_vectors(vectors)
         self.classifier.fit(matrix, labels)
-        num_features = self.predictor.numFeatures
-        self.predictor = LogisticRegressionModel(self.classifier.coef_[0].tolist(), self.intercept, num_features, 2)
+
+        self._predictor = LogisticRegressionModel(
+            self.classifier.coef_[0].tolist(), self.intercept, self._predictor.numFeatures, 2)
 
     def good_filter_function(self):
         """
@@ -188,7 +191,3 @@ class RightPersonModel(object):
             return True
 
         return profile_in_segment
-
-    def get_segment_hash(self):
-        """hash the segment definition"""
-        return hash(ujson.dumps(sorted(self.config.normal_signature), sort_keys=True))

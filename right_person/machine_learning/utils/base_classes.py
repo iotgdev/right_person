@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 """
 Utility base classes to help interface with the right_person code.
+
+LogReader:
+- a log reader base for adding good users (from logs) to right_person models
+- interfaces with the bulk_add_good_user_ids_to_models function
 """
 
 from abc import ABCMeta, abstractmethod, abstractproperty
