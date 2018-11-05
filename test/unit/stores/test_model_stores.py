@@ -15,6 +15,7 @@ MODULE_IMPORT_LOCATION = 'right_person.stores.model_stores.'
 class TestGetNextVersion(unittest.TestCase):
 
     def test_logging(self):
+        self.fail()
         datetime_mock = mock.Mock()
         datetime_mock.date.today.return_value = datetime(2018, 1, 1)
         with mock.patch(MODULE_IMPORT_LOCATION + 'logger') as logger, \
