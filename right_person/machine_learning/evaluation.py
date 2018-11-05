@@ -25,8 +25,8 @@ def log_loss(predictions, labels, avg_score):
     np = 1 - p
     entropy = -p * log(p) - np * log(np)
     n_samples = len(labels)
-    print sum(predictions), sum(labels)
     data = zip(predictions, labels)
+
     return sum(-log(prob) if label else -log(1 - prob) for prob, label in data) / n_samples / entropy
 
 

@@ -13,12 +13,12 @@ Usage:
 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 """
 from __future__ import unicode_literals
+
 import logging
 from contextlib import contextmanager
 
 from right_person.data_mining.cluster.manager import create_right_person_cluster, destroy_right_person_cluster
 from right_person.data_mining.cluster.session import get_new_right_person_spark_session
-
 
 logger = logging.getLogger('right_person.data_mining.cluster.context_managers')
 

@@ -71,9 +71,10 @@ class ModelSignatureFilter(object):
 
     @staticmethod
     def clean_field_name(field_name):
-        if not isinstance(field_name, str):
-            raise ValueError('field_name must be a string!'.format(field_name))
-        return field_name
+        try:
+            return str(field_name)
+        except:
+            raise ValueError('field_name must be a string! {}'.format(field_name))
 
     @staticmethod
     def clean_record_max_age(record_max_age):

@@ -56,7 +56,7 @@ class ProfileDocumentConfig(object):
             raise ValueError('doc_type must be string!')
 
 
-class ProfileFieldConfig(object):
+class ProfileFieldConfig(object):  # todo: possibly remove this object?
     """A config object outlining relevant fields in a document used to build profiles"""
     __metaclass__ = AttributeCleaningMetaclass
 
@@ -74,9 +74,10 @@ class ProfileFieldConfig(object):
 
     @staticmethod
     def clean_field_name(field_name):
-        if not isinstance(field_name, basestring):
+        try:
+            return str(field_name)
+        except:
             raise ValueError('field_name must be string!')
-        return field_name
 
     @staticmethod
     def clean_field_type(field_type):
@@ -86,12 +87,6 @@ class ProfileFieldConfig(object):
             raise
         except:
             raise ValueError('invalid field_type: {}.'.format(field_type))
-
-    @staticmethod
-    def clean_short_name(short_name):
-        if len(short_name) > 3:
-            raise ValueError('short_name should be at most 3 characters!')
-        return short_name
 
     @staticmethod
     def clean_field_position(field_position):
@@ -108,7 +103,8 @@ class ProfileFieldConfig(object):
             raise ValueError('invalid value for stored_as! should be in {}'.format(tuple(valid_values)))
         return stored_as
 
-    def get_value_from_record(self, split_record):
+    def get_value_from_record(self, split_record):  # todo: remove from this class and move to the miner?
+
         value = self.get_true_value(split_record)
         return self.field_name, self.get_stored_value(value)
 
@@ -120,5 +116,5 @@ class ProfileFieldConfig(object):
         elif self.store_as is None:
             return value
 
-    def get_true_value(self, split_record):
+    def get_true_value(self, split_record):  # todo: investigate time complexity on this, shouldn't be this slow...
         return eval(self.field_type)(*[split_record[i] for i in self.field_position])
