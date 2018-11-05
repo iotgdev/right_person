@@ -17,6 +17,9 @@ from right_person.utilities.connections import get_s3_connection
 _VERSION_DELIMITER = '-'
 
 
+logger = logging.getLogger('right_person.stores.model_stores')
+
+
 def get_model_directory(prefix, model_id):
     """Get the location of the machine_learning prefixes"""
     return '/'.join((prefix, 'models', model_id))
@@ -35,7 +38,7 @@ def get_next_version(version=None):
     try:
         ver_parts = [int(part) for part in version.split(_VERSION_DELIMITER)]
     except AttributeError:
-        logging.warning('error when creating new version from {}'.format(version))
+        logger.warning('error when creating new version from {}'.format(version))
         ver_parts = [0, 0, 0, 0]
 
     if ver_parts[0:3] == [today.year, today.month, today.day]:
