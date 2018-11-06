@@ -2,6 +2,12 @@
 # -*- coding: utf-8 -*-
 """
 Classes managing the storage of right person profile miners
+
+Usage:
+>>> store = S3ProfileMinerStore('', '', object)
+>>> miner = store.retrieve('1234')
+>>> miners = store.list()
+>>> store.delete(miner.miner_id)
 """
 from __future__ import unicode_literals
 
@@ -13,9 +19,9 @@ import ulid
 from right_person.utilities.connections import get_s3_connection
 
 
-def get_job_directory(prefix, job_id):
+def get_job_directory(prefix, miner_id):
     """Get the location of the job code"""
-    return '/'.join((prefix, 'profile_miners', job_id))
+    return '/'.join((prefix, 'profile_miners', miner_id))
 
 
 class S3ProfileMinerStore(object):
@@ -91,14 +97,14 @@ class S3ProfileMinerStore(object):
 
         self._delete_key(self.metadata_prefix + miner_id)
 
-    def _set_json(self, job_id, location, data):
+    def _set_json(self, miner_id, location, data):
         """saves a json document to s3"""
-        file_path = get_job_directory(self.s3_prefix, job_id) + '/{}.json'.format(location)
+        file_path = get_job_directory(self.s3_prefix, miner_id) + '/{}.json'.format(location)
         self._create_key(file_path, body=ujson.dumps(data))
 
-    def _get_json(self, job_id, location):
+    def _get_json(self, miner_id, location):
         """gets a json document from s3"""
-        file_path = get_job_directory(self.s3_prefix, job_id) + '/{}.json'.format(location)
+        file_path = get_job_directory(self.s3_prefix, miner_id) + '/{}.json'.format(location)
         obj = get_s3_connection().Object(self.s3_bucket, file_path)
 
         return ujson.loads(obj.get()['Body'].read())

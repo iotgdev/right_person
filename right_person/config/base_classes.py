@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Base classes for RightPerson configs.
+Base class for RightPerson configs.
 
-- An attribute cleaning metaclass for config validation
-- A Json baseclass for serialisation
+The AttributeCleaningMetaclass supplies the following behaviour:
+1. Class attempts to set an attribute to a value
+2. the metaclass searches the class namespace and looks for a corresponding clean_<attribute> method
+3. the method runs and cleans the attribute (possibly raising an error)
+4. the attribute is set on the class (having been cleaned)
 
 No direct usage is expected.
 """
