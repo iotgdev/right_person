@@ -55,8 +55,8 @@ Interfacing with the models is easy:
 ```
 
 Models carry a config, which can be used to train the model. 
-A good signature supplies instructions to define whether or not a user belongs in the `model.good_users`
-A normal signature defines the segment of profiles that should be used as the control group in training.
+A good definition supplies instructions to define whether or not a user belongs in the `model.good_users` set.
+An audience defines the profiles that should be used as the control group in training.
 Config classes for the model are json serialisable and can be found at `right_person.machine_learning.models.config`:
 
 ```python
@@ -65,7 +65,7 @@ Config classes for the model are json serialisable and can be found at `right_pe
 ...     [
 ...     ModelSignatureFilter('good_field', 'good_value', 2)
 ...     ], [
-...     ModelSignatureFilter('normal_field', 'normal_value')
+...     ModelSignatureFilter('audience_field', 'audience_value')
 ...     ], 10.0)
 ```
 
