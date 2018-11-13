@@ -20,6 +20,7 @@ class RightPersonModelConfig(object):
 
     def __init__(self, features, good_definition, audience, max_ratio):
         """
+        :param list[str] features: the names of the features the model will process from the profiles
         :param list[SignatureFilter] good_definition: the definition of good (any filters can pass to be included)
         :param list[SignatureFilter] audience: the filters that restrict which data the audience builds from
         :param float max_ratio: the maximum ratio of normal / good for machine learning machine_learning building
