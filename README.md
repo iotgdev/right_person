@@ -55,6 +55,7 @@ Interfacing with the models is easy:
 ```
 
 Models carry a config, which can be used to train the model. 
+A list of whitelisted features defines which data the model will process from some large unknown profile
 A good definition supplies instructions to define whether or not a user belongs in the `model.good_users` set.
 An audience defines the profiles that should be used as the control group in training.
 Config classes for the model are json serialisable and can be found at `right_person.machine_learning.models.config`:
@@ -62,11 +63,10 @@ Config classes for the model are json serialisable and can be found at `right_pe
 ```python
 >>> from right_person.machine_learning.models.config import RightPersonModelConfig, ModelSignatureFilter
 >>> config = RightPersonModelConfig(
-...     [
-...     ModelSignatureFilter('good_field', 'good_value', 2)
-...     ], [
-...     ModelSignatureFilter('audience_field', 'audience_value')
-...     ], 10.0)
+...     ['feature_name1', 'feature_name2', ...],
+...     [ModelSignatureFilter('good_field', 'good_value', 2), ...], 
+...     [ModelSignatureFilter('audience_field', 'audience_value'), ...],
+...     10.0)
 ```
 
 ### Stores

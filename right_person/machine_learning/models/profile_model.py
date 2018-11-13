@@ -39,7 +39,7 @@ class RightPersonModel(object):
         self.classifier = LogisticRegression(C=1, fit_intercept=False, penalty='l2')
         self._predictor = LogisticRegressionModel([], 0, HASH_SIZE, 2)
 
-        self.config = RightPersonModelConfig([], [], 10.0)
+        self.config = RightPersonModelConfig([], [], [], 10.0)
 
         self.good_users = set()
         self.audience_size = 0
@@ -69,6 +69,9 @@ class RightPersonModel(object):
         else:
             return 0
 
+    def clean_profile(self, profile):
+        return {k: v for k, v in profile.items() if k in self.config.features}
+
     def predict(self, profile):
         """
         Predicts the probability of a profile being "positive"
@@ -76,7 +79,7 @@ class RightPersonModel(object):
         :rtype: float
         :return: probability of good
         """
-        vector = get_right_person_vector(profile)
+        vector = get_right_person_vector(self.clean_profile(profile))
         return self._predictor.predict(SparseVector(self._predictor.numFeatures, sorted(vector), [1] * len(vector)))
 
     def serialize(self):
@@ -123,7 +126,7 @@ class RightPersonModel(object):
         :param list[dict] profiles: the data_miners to use for utilities
         :param list[int] labels: the corresponding labels (0 or 1) for the data_miners
         """
-        vectors = map(get_right_person_vector, profiles)
+        vectors = [get_right_person_vector(self.clean_profile(profile)) for profile in profiles]
         matrix = combine_vectors(vectors)
         self.classifier.fit(matrix, labels)
 
