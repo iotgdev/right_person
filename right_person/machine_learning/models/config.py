@@ -18,25 +18,25 @@ class RightPersonModelConfig(object):
     """A configuration for a right_person machine_learning"""
     __metaclass__ = AttributeCleaningMetaclass
 
-    def __init__(self, good_signature, normal_signature, max_ratio):
+    def __init__(self, good_definition, audience, max_ratio):
         """
-        :param list[SignatureFilter] good_signature: the definition of good (any filters can pass to be included)
-        :param list[SignatureFilter] normal_signature: the definition of normal
+        :param list[SignatureFilter] good_definition: the definition of good (any filters can pass to be included)
+        :param list[SignatureFilter] audience: the filters that restrict which data the audience builds from
         :param float max_ratio: the maximum ratio of normal / good for machine learning machine_learning building
         """
-        self.good_signature = good_signature  # tag_id = 1 for example
-        self.normal_signature = normal_signature  # geo, is_mobile, etc
+        self.good_definition = good_definition  # tag_id = 1 for example
+        self.audience = audience  # geo, is_mobile, etc
         self.max_ratio = max_ratio
 
     @staticmethod
-    def clean_good_signature(signature_filters):
+    def clean_good_definition(signature_filters):
         try:
             return [f if isinstance(f, ModelSignatureFilter) else ModelSignatureFilter(**f) for f in signature_filters]
         except:
             raise ValueError('invalid traits! should be list of {}'.format(ModelSignatureFilter.__name__))
 
     @staticmethod
-    def clean_normal_signature(signature_filters):
+    def clean_audience(signature_filters):
         try:
             return [f if isinstance(f, ModelSignatureFilter) else ModelSignatureFilter(**f) for f in signature_filters]
         except:

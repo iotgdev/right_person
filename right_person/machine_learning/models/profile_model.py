@@ -42,7 +42,7 @@ class RightPersonModel(object):
         self.config = RightPersonModelConfig([], [], 10.0)
 
         self.good_users = set()
-        self.segment_size = 0
+        self.audience_size = 0
         self.good_count = 0
 
     # noinspection PyPropertyDefinition
@@ -58,8 +58,8 @@ class RightPersonModel(object):
     @property
     def downsampling_rate(self):
         return min(1,
-                   float(MAX_TRAINING_SET_SIZE - self.good_count) / self.segment_size,
-                   float(self.good_count * self.config.max_ratio) / self.segment_size
+                   float(MAX_TRAINING_SET_SIZE - self.good_count) / self.audience_size,
+                   float(self.good_count * self.config.max_ratio) / self.audience_size
                    )
 
     @property
@@ -85,7 +85,7 @@ class RightPersonModel(object):
             'name': self.name,
             'config': self.config,
             'good_users': self.good_users,
-            'segment_size': self.segment_size,
+            'audience_size': self.audience_size,
 
             'l2reg': self.classifier.C,
             'coef': self.classifier.coef_.tolist(),
@@ -94,13 +94,13 @@ class RightPersonModel(object):
             'num_features': self._predictor.numFeatures,
         }
 
-    def deserialize(self, config, good_users, segment_size, l2reg, coef, warm_start, num_features):
+    def deserialize(self, config, good_users, audience_size, l2reg, coef, warm_start, num_features):
         """
         Deserialize a machine_learning for storage
 
         :type config: dict
         :type good_users: list
-        :type segment_size: int
+        :type audience_size: int
         :type l2reg: float
         :type coef: list[list[float]]
         :type warm_start: bool
@@ -109,7 +109,7 @@ class RightPersonModel(object):
         self.config = RightPersonModelConfig(**config)
         self.good_users = set(good_users)
         self.good_count = len(self.good_users)
-        self.segment_size = segment_size
+        self.audience_size = audience_size
 
         self.classifier = LogisticRegression(warm_start=warm_start, penalty='l2', fit_intercept=False, C=l2reg)
         self.classifier.coef_ = numpy.array(coef)
@@ -137,7 +137,7 @@ class RightPersonModel(object):
         :rtype: Callable
         """
 
-        good_signature = self.config.good_signature
+        good_definition = self.config.good_definition
 
         def record_is_good(record, record_age):
             """
@@ -148,7 +148,7 @@ class RightPersonModel(object):
             :return: whether or not the record should be included in the definition of good
             """
             now = datetime.datetime.today()
-            for filterer in good_signature:
+            for filterer in good_definition:
                 field_type = type(filterer.field_value)
                 if filterer.field_value != field_type(record[filterer.field_name]):
                     return False
@@ -158,14 +158,14 @@ class RightPersonModel(object):
 
         return record_is_good
 
-    def segment_filter_function(self):
+    def audience_filter_function(self):
         """
         returns a function that identifies whether a particular
         profile should be included in the models training definition
         :rtype: Callable
         """
 
-        normal_filters = {field.field_name: field.field_value for field in self.config.normal_signature}
+        normal_filters = {field.field_name: field.field_value for field in self.config.audience}
 
         def feature_matches_profile(normal_definition_value, profile_value):
 
@@ -178,7 +178,7 @@ class RightPersonModel(object):
                 return field_type(normal_definition_value) == field_type(profile_value)
 
         # noinspection PyUnusedLocal
-        def profile_in_segment(user_profile):
+        def profile_in_audience(user_profile):
             user_id, profile = user_profile
 
             for field, value in normal_filters.items():
@@ -190,4 +190,4 @@ class RightPersonModel(object):
 
             return True
 
-        return profile_in_segment
+        return profile_in_audience

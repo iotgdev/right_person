@@ -11,22 +11,22 @@ from right_person.data_mining.profiles.transformations import filter_profiles, s
     count_profiles
 
 
-def train_model(segment, model, cross_validation_folds=1, hyperparameters=None):
+def train_model(audience, model, cross_validation_folds=1, hyperparameters=None):
     """
-    Train a right person model for some given segment and machine learning parameters
-    :param list|pyspark.RDD segment: the segment (list of users and profiles) to use as a basis for training
+    Train a right person model for some given audience and machine learning parameters
+    :param list|pyspark.RDD audience: the audience (list of users and profiles) to use as a basis for training
     :type model: RightPersonModel
     :type cross_validation_folds: int
     :type hyperparameters: dict[str, list[float]]
     :rtype: RightPersonModel
     """
-    model.segment_size = count_profiles(segment)
+    model.audience_size = count_profiles(audience)
 
     # we have to filter the good users from the target group for training purposes
-    good_set = filter_profiles(segment, lambda (user_id, profile): user_id in model.good_users)
+    good_set = filter_profiles(audience, lambda (user_id, profile): user_id in model.good_users)
     model.good_count = count_profiles(good_set)
 
-    normal_set = sample_profiles(segment, model.downsampling_rate)
+    normal_set = sample_profiles(audience, model.downsampling_rate)
 
     good_profiles = map_profiles(good_set, lambda (user_id, profile): profile)
     normal_profiles = map_profiles(normal_set, lambda (user_id, profile): profile)

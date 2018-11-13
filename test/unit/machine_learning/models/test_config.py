@@ -12,13 +12,13 @@ from right_person.machine_learning.models.config import RightPersonModelConfig, 
 
 class TestRightPersonModelConfig(unittest.TestCase):
 
-    def test_clean_good_signature_fail(self):
+    def test_clean_good_definition_fail(self):
         with self.assertRaises(ValueError):
-            RightPersonModelConfig.clean_good_signature(mock.Mock())
+            RightPersonModelConfig.clean_good_definition(mock.Mock())
 
-    def test_clean_normal_signature_fail(self):
+    def test_clean_audience_fail(self):
         with self.assertRaises(ValueError):
-            RightPersonModelConfig.clean_normal_signature(mock.Mock())
+            RightPersonModelConfig.clean_audience(mock.Mock())
 
     def test_clean_max_ratio_fail(self):
         with self.assertRaises(ValueError):
