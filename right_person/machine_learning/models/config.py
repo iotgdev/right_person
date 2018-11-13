@@ -18,15 +18,23 @@ class RightPersonModelConfig(object):
     """A configuration for a right_person machine_learning"""
     __metaclass__ = AttributeCleaningMetaclass
 
-    def __init__(self, good_definition, audience, max_ratio):
+    def __init__(self, features, good_definition, audience, max_ratio):
         """
         :param list[SignatureFilter] good_definition: the definition of good (any filters can pass to be included)
         :param list[SignatureFilter] audience: the filters that restrict which data the audience builds from
         :param float max_ratio: the maximum ratio of normal / good for machine learning machine_learning building
         """
+        self.features = features
         self.good_definition = good_definition  # tag_id = 1 for example
         self.audience = audience  # geo, is_mobile, etc
         self.max_ratio = max_ratio
+
+    @staticmethod
+    def clean_features(features):
+        try:
+            return list(map(str, features))
+        except:
+            raise ValueError('features should be a list of strings!')
 
     @staticmethod
     def clean_good_definition(signature_filters):
