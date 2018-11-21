@@ -86,6 +86,7 @@ class S3RightPersonModelStore(object):
             'coef': training_weights,
             'l2reg': classifier_params['l2regularisation'],
             'warm_start': classifier_params['enable_incremental_building'],
+            'audience_good_size': classifier_params['audience_good_size'],
             'audience_size': classifier_params['audience_size'],
             'num_features': classifier_params['num_features']
         }
@@ -146,6 +147,7 @@ class S3RightPersonModelStore(object):
         classifier_data = {
             'l2regularisation': serialized_model['l2reg'],
             'enable_incremental_building': serialized_model['warm_start'],
+            'audience_good_size': serialized_model['audience_good_size'],
             'audience_size': serialized_model['audience_size'],
             'num_features': serialized_model['num_features'],
         }
