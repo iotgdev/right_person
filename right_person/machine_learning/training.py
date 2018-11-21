@@ -24,7 +24,7 @@ def train_model(audience, model, cross_validation_folds=1, hyperparameters=None)
 
     # we have to filter the good users from the target group for training purposes
     good_set = filter_profiles(audience, lambda (user_id, profile): user_id in model.good_users)
-    model.good_count = count_profiles(good_set)
+    model.audience_good_size = count_profiles(good_set)
 
     normal_set = sample_profiles(audience, model.downsampling_rate)
 

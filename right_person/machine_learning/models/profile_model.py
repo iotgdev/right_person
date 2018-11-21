@@ -43,7 +43,7 @@ class RightPersonModel(object):
 
         self.good_users = set()
         self.audience_size = 0
-        self.good_count = 0
+        self.audience_good_size = 0
 
     # noinspection PyPropertyDefinition
     l2reg = property(lambda self: self.classifier.C, lambda self, value: setattr(self.classifier, 'C', value))
@@ -58,8 +58,8 @@ class RightPersonModel(object):
     @property
     def downsampling_rate(self):
         return min(1,
-                   float(MAX_TRAINING_SET_SIZE - self.good_count) / self.audience_size,
-                   float(self.good_count * self.config.max_ratio) / self.audience_size
+                   float(MAX_TRAINING_SET_SIZE - self.audience_good_size) / self.audience_size,
+                   float(self.audience_good_size * self.config.max_ratio) / self.audience_size
                    )
 
     @property
@@ -89,6 +89,7 @@ class RightPersonModel(object):
             'config': self.config,
             'good_users': self.good_users,
             'audience_size': self.audience_size,
+            'audience_good_size': self.audience_good_size,
 
             'l2reg': self.classifier.C,
             'coef': self.classifier.coef_.tolist(),
@@ -97,12 +98,13 @@ class RightPersonModel(object):
             'num_features': self._predictor.numFeatures,
         }
 
-    def deserialize(self, config, good_users, audience_size, l2reg, coef, warm_start, num_features):
+    def deserialize(self, config, good_users, audience_good_size, audience_size, l2reg, coef, warm_start, num_features):
         """
         Deserialize a machine_learning for storage
 
         :type config: dict
         :type good_users: list
+        :type audience_good_size: int
         :type audience_size: int
         :type l2reg: float
         :type coef: list[list[float]]
@@ -111,7 +113,7 @@ class RightPersonModel(object):
         """
         self.config = RightPersonModelConfig(**config)
         self.good_users = set(good_users)
-        self.good_count = len(self.good_users)
+        self.audience_good_size = audience_good_size
         self.audience_size = audience_size
 
         self.classifier = LogisticRegression(warm_start=warm_start, penalty='l2', fit_intercept=False, C=l2reg)
