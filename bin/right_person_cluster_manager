@@ -69,9 +69,11 @@ def edit_cluster_settings():
     """
     temp_file = TERRAFORM_VARS + '.tmp'
     terraform_state_location = tempfile.mkdtemp()
+    terraform_vars_temp_file = tempfile.TemporaryFile()
 
-    with open(TERRAFORM_VARS) as initial, open(temp_file, 'w') as copy:
-        copy.writelines(initial.readlines())
+    with open(TERRAFORM_VARS) as initial:
+        terraform_vars_temp_file.writelines(initial.readlines())
+        terraform_vars_temp_file.seek(0)
 
     retry = True
     while retry:
@@ -102,8 +104,8 @@ def edit_cluster_settings():
                 print('The terraform is not valid!\n{}'.format(e.message))
                 raise
             else:
-                with open(TERRAFORM_VARS, 'w') as initial, open(temp_file) as copy:
-                    initial.writelines(copy.readlines())
+                with open(TERRAFORM_VARS, 'w') as initial:
+                    initial.writelines(terraform_vars_temp_file.readlines())
 
         except (Exception, ):
             retry_input = raw_input("Would you like to retry? ")
@@ -113,6 +115,7 @@ def edit_cluster_settings():
             retry = options[retry_input]
         finally:
             if not retry:
+                terraform_vars_temp_file.close()
                 os.remove(temp_file)
                 shutil.rmtree(terraform_state_location)
 
