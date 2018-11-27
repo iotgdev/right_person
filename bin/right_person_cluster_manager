@@ -67,9 +67,8 @@ def edit_cluster_settings():
     """
     edit the terraform variables file
     """
-    temp_file = TERRAFORM_VARS + '.tmp'
     terraform_state_location = tempfile.mkdtemp()
-    terraform_vars_temp_file = tempfile.TemporaryFile()
+    terraform_vars_temp_file = tempfile.NamedTemporaryFile()
 
     with open(TERRAFORM_VARS) as initial:
         terraform_vars_temp_file.writelines(initial.readlines())
@@ -80,15 +79,15 @@ def edit_cluster_settings():
 
         try:
             try:
-                subprocess.call(['nano', temp_file])
+                subprocess.call(['nano', terraform_vars_temp_file.name])
                 print('validating...')
-                terraform_vars = ujson.load(open(temp_file))
+                terraform_vars = ujson.load(open(terraform_vars_temp_file.name))
                 state_s3_path, region = terraform_vars['cluster_state_bucket'], terraform_vars['cluster_region']
 
                 run_system_shell_process(str(_TERRAFORM_INIT_FUNCTION.format(
                     cluster_state_bucket=state_s3_path, cluster_region=region, cluster_id='right_person_cluster_test',
                     input_location=TERRAFORM_DIRECTORY, terraform_state_location=terraform_state_location,
-                    vars_file=temp_file
+                    vars_file=terraform_vars_temp_file.name
                 ).replace('\n', ' ').strip()))
 
                 run_system_shell_process(
@@ -116,7 +115,6 @@ def edit_cluster_settings():
         finally:
             if not retry:
                 terraform_vars_temp_file.close()
-                os.remove(temp_file)
                 shutil.rmtree(terraform_state_location)
 
 
