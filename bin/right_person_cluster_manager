@@ -45,7 +45,8 @@ TERRAFORM_VALIDATE = """
 terraform validate
 -no-color
 {terraform_dir}
-"""
+-var-file={vars_file}
+"""  # todo: fix validation
 
 
 def build_ami():
@@ -90,8 +91,7 @@ def edit_cluster_settings():
                     vars_file=terraform_vars_temp_file.name
                 ).replace('\n', ' ').strip()))
 
-                run_system_shell_process(
-                    str(TERRAFORM_VALIDATE.format(terraform_dir=TERRAFORM_DIRECTORY).replace('\n', ' ').strip()))
+                # TODO: fix bad validation
 
             except OSError:
                 print('Cannot Load file for editing: no editor found: {}'.format(TERRAFORM_VARS))
