@@ -53,6 +53,7 @@ setup(
         'numpy',
         'pyspark==2.3.1',
         'requests',
+        'scipy==1.1.0',
         'sklearn',
         'ujson',
         'ulid',
