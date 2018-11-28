@@ -52,7 +52,7 @@ terraform validate
 def build_ami():
     """Build a machine image for a right_person spark node"""
     terraform_vars = get_terraform_vars()
-    region, subnet_id = terraform_vars['region'], terraform_vars['subnet_id']
+    region, subnet_id = terraform_vars['cluster_region'], terraform_vars['subnet_id']
     playbook_file = os.path.join(CLUSTER_DIR, 'ansible', 'right_person_node.yml')
     packer_file = os.path.join(CLUSTER_DIR, 'packer', 'ami_builder.json')
     return run_system_shell_process(str(BUILD_AMI_FUNCTION.format(
