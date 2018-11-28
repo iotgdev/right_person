@@ -26,7 +26,7 @@ def bulk_add_good_user_ids_to_models(models, log_reader):
 
     end_date = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     for day in range(max_days, 0, -1):
-        date = end_date - datetime.timedelta(days=1)
+        date = end_date - datetime.timedelta(days=day)
         for record in log_reader.read(date):
             for model in models:
                 if filter_functions[model](record, date):
