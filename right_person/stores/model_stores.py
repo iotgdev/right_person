@@ -131,9 +131,6 @@ class S3RightPersonModelStore(object):
         Each save makes a new version
         :rtype: str
         """
-        if not model.model_id:
-            raise ValueError('Model has no id!')
-
         model.version = get_next_version(model.version)
         model_prefix = '{}/{}'.format(model.index, model.version)
         serialized_model = model.serialize()
