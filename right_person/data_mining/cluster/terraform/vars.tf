@@ -27,7 +27,7 @@ variable "s3_bucket_access_whitelist" {
   type = "list"
 }
 
-variable "ssh_key_name" {
+variable "ssh_key_pair" {
   type = "string"
 }
 

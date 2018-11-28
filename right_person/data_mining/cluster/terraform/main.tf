@@ -198,7 +198,7 @@ resource "aws_instance" "right_person-spark-master" {
   ami = "${var.instance_ami}"
   instance_type = "${var.master_instance_type}"
   iam_instance_profile = "${aws_iam_instance_profile.right_person_instance_profile.name}"
-  key_name = "${var.ssh_key_name}"
+  key_name = "${var.ssh_key_pair}"
   vpc_security_group_ids = ["${list(data.aws_security_group.selected_additional_groups.id, aws_security_group.right_person-spark-master.id, aws_security_group.right_person-spark-node.id)}"]
   subnet_id = "${var.subnet_id}"
   user_data = "${data.template_file.right_person-spark-master-user_data.rendered}"
@@ -220,7 +220,7 @@ resource "aws_instance" "right_person-spark-slave" {
   ami = "${var.instance_ami}"
   instance_type = "${var.slave_instance_type}"
   iam_instance_profile = "${aws_iam_instance_profile.right_person_instance_profile.name}"
-  key_name = "${var.ssh_key_name}"
+  key_name = "${var.ssh_key_pair}"
   vpc_security_group_ids = ["${list(data.aws_security_group.selected_additional_groups.id, aws_security_group.right_person-spark-node.id)}"]
   subnet_id = "${var.subnet_id}"
   user_data = "${data.template_file.right_person-spark-slave-user_data.rendered}"
