@@ -41,6 +41,8 @@
       group: ubuntu
       state: directory
 
+  become: yes
+
 
 - block:
   - name: Make a spark home directory
@@ -61,9 +63,3 @@
     template:
       src: spark-defaults.conf
       dest: /home/ubuntu/spark/conf/
-
-- block:
-  - name: create a directory to use for spark storage on disk
-    file:
-      path: /mnt/
-      state: directory
