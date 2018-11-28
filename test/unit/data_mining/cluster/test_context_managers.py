@@ -6,7 +6,7 @@ import unittest
 import mock
 
 
-from right_person.data_mining.cluster.context_managers import get_spark_cluster_session
+from right_person.data_mining.cluster.context_managers import right_person_cluster_session
 
 
 MODULE_IMPORT_LOCATION = 'right_person.data_mining.cluster.context_managers.'
@@ -21,7 +21,7 @@ class TestGetSparkClusterSession(unittest.TestCase):
                 mock.patch(MODULE_IMPORT_LOCATION + 'logger') as logger:
 
             with self.assertRaises(AssertionError):
-                with get_spark_cluster_session(str('test')):
+                with right_person_cluster_session(str('test')):
 
                     self.assertTrue(create.called)
                     self.assertTrue(get_session.called)

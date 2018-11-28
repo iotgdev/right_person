@@ -32,7 +32,6 @@ terraform init
 -backend-config 'bucket={cluster_state_bucket}'
 -backend-config 'region={cluster_region}'
 -backend-config 'key={cluster_region}/right_person/{cluster_id}/tf.state'
--input=false
 -no-color
 -upgrade
 -from-module={input_location}

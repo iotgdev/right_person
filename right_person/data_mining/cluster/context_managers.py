@@ -7,7 +7,7 @@ provides a spark session to the user after creating a cluster
 then destroys the cluster on namespace completion/error
 
 Usage:
->>> with get_spark_cluster_session('job-1') as session:
+>>> with right_person_cluster_session('job-1') as session:
 >>>     # do work, such as run a right person job
 >>>     session.sparkContext.parallelize(range(10)).collect()
 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -24,7 +24,7 @@ logger = logging.getLogger('right_person.data_mining.cluster.context_managers')
 
 
 @contextmanager
-def get_spark_cluster_session(job_id):
+def right_person_cluster_session(job_id):
     """
     context manager for a spark session and cluster.
     builds a spark cluster, provides a spark session

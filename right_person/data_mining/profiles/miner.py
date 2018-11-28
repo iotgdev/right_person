@@ -8,9 +8,9 @@ The dataset requires a data mining phase.
 This file contains data mining classes to build profiles.
 
 Usage:
->>> from right_person.data_mining.cluster.context_managers import get_spark_cluster_session
+>>> from right_person.data_mining.cluster.context_managers import right_person_cluster_session
 >>> miner = RightPersonProfileMiner({}, '')
->>> with get_spark_cluster_session('cluster-id') as session:
+>>> with right_person_cluster_session('cluster-id') as session:
 ...:    miner.run(session)
 """
 from __future__ import unicode_literals

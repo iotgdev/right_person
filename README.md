@@ -11,8 +11,8 @@ The data mining is powered by spark.
 
 Accessing a cluster is easy with right person:
 ```python
->>> from right_person.data_mining.cluster.context_managers import get_spark_cluster_session
->>> with get_spark_cluster_session('cluster-id') as session:
+>>> from right_person.data_mining.cluster.context_managers import right_person_cluster_session
+>>> with right_person_cluster_session('cluster-id') as session:
 ...     # do work using the session
 ```
 
@@ -75,7 +75,7 @@ Both the miners and models have store classes that provide this interface:
 ```python
 >>> from right_person.stores.miner_stores import S3ProfileMinerStore
 >>> from right_person.stores.model_stores import S3RightPersonModelStore
->>> from right_person.data_mining.cluster.context_managers import get_spark_cluster_session
+>>> from right_person.data_mining.cluster.context_managers import right_person_cluster_session
 >>>
 >>> model_store = S3RightPersonModelStore('', '', object)
 >>> miner_store = S3ProfileMinerStore('', '', object)
@@ -83,7 +83,7 @@ Both the miners and models have store classes that provide this interface:
 >>> model_ids = model_store.list()
 >>> miner = miner_store.retrieve('1234')
 >>>
->>> with get_spark_cluster_session('cluster-id') as session:
+>>> with right_person_cluster_session('cluster-id') as session:
 ...     miner.run(session)
 ...     profiles = miner.profiles(session)
 >>>
