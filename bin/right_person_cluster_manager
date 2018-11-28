@@ -55,9 +55,9 @@ def build_ami():
     region, subnet_id = terraform_vars['cluster_region'], terraform_vars['subnet_id']
     playbook_file = os.path.join(CLUSTER_DIR, 'ansible', 'playbooks', 'right_person_node.yml')
     packer_file = os.path.join(CLUSTER_DIR, 'packer', 'ami_builder.json')
-    return run_system_shell_process(str(BUILD_AMI_FUNCTION.format(
+    print(run_system_shell_process(str(BUILD_AMI_FUNCTION.format(
         region=region, subnet=subnet_id, playbook_file=playbook_file, packer_file=packer_file
-    ).replace('\n', ' ').strip()))
+    ).replace('\n', ' ').strip())))
 
 
 def terraform_validate():
