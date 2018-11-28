@@ -14,12 +14,12 @@ def bulk_add_good_user_ids_to_models(models, log_reader):
     """
     bulk process to add good profile_ids to machine_learning
     reads data from log_reader and evaluates if the profile_id should be included
-    :param list[RightPersonModel] models: the machine_learning to update
+    :type models: list[right_person.machine_learning.models.profile_model.RightPersonModel]
     :param log_reader:
     :return:
     """
     # machine_learning require different start dates to get the good ids.
-    max_days = max([max(f.record_max_age for f in model.config.good_signature) for model in models])
+    max_days = max([max(f.record_max_age for f in model.config.good_definition) for model in models])
 
     # to avoid redefining the functions
     filter_functions = {model: model.good_filter_function() for model in models}
@@ -30,7 +30,7 @@ def bulk_add_good_user_ids_to_models(models, log_reader):
         for record in log_reader.read(date):
             for model in models:
                 if filter_functions[model](record, date):
-                    model.good_profile_ids.add(record[log_reader.profile_id_field])
+                    model.good_users.add(record[log_reader.profile_id_field])
 
 
 def get_shuffled_training_data(profiles, labels, seed):
