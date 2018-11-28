@@ -144,6 +144,23 @@ class RightPersonModel(object):
 
         good_definition = self.config.good_definition
 
+        def filter_is_good(filterer, record, record_age):
+            """
+            Checks if a record passes a good filter check
+            :type filterer: right_person.machine_learning.models.config.ModelSignatureFilter
+            :type record: dict|list|tuple
+            :type record_age: datetime.datetime
+            :rtype: bool
+            """
+            now = datetime.datetime.today()
+            field_type = type(filterer.field_value)
+
+            if filterer.field_value != field_type(record[filterer.field_name]):
+                return False
+            if filterer.record_max_age and now - record_age > datetime.timedelta(days=filterer.record_max_age):
+                return False
+            return True
+
         def record_is_good(record, record_age):
             """
             Checks if a record can be considered good as per the machine_learning good signature
@@ -152,14 +169,7 @@ class RightPersonModel(object):
             :rtype: bool
             :return: whether or not the record should be included in the definition of good
             """
-            now = datetime.datetime.today()
-            for filterer in good_definition:
-                field_type = type(filterer.field_value)
-                if filterer.field_value != field_type(record[filterer.field_name]):
-                    return False
-                if filterer.record_max_age and now - record_age > datetime.timedelta(days=filterer.record_max_age):
-                    return False
-            return True
+            return any(filter_is_good(filterer, record, record_age) for filterer in good_definition)
 
         return record_is_good
 
