@@ -33,6 +33,7 @@ import os
 import shutil
 import subprocess
 import ujson
+import sys
 
 import requests
 
@@ -68,19 +69,25 @@ def get_current_ipv4():
         return requests.get('http://ip.42.pl/raw', timeout=1).text
 
 
-def run_system_shell_process(cmd):
+def run_system_shell_process(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE):
     """
     runs a shell process. raises errors and returns stdout
     :type cmd: str
+    :param stdout: file like or None. Stores the results of system stdout
+    :param stderr: file like or None. Stores the results of system stderr
     :rtype: str
     """
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, shell=True)
-    info = '\n'.join([line for line in iter(process.stdout.readline, b'')])
-    errors = '\n'.join([line for line in iter(process.stderr.readline, b'')])
-    if errors:
-        logger.error(errors)
-        raise RuntimeError("Command failed: {}\n".format(cmd) + errors)
-    process.stdout.close()
+    process = subprocess.Popen(cmd, stdout=stdout, stderr=stderr, bufsize=1, shell=True)
+    info = None
+    if stdout:
+        info = '\n'.join([line for line in iter(process.stdout.readline, b'')])
+        process.stdout.close()
+    if stderr:
+        errors = '\n'.join([line for line in iter(process.stderr.readline, b'')])
+        if errors:
+            logger.error(errors)
+            raise RuntimeError("Command failed: {}\n".format(cmd) + errors)
+        process.stderr.close()
     return info
 
 
@@ -92,14 +99,13 @@ def get_terraform_vars():
     return ujson.load(open(TERRAFORM_VARS))
 
 
-def add_package_to_spark(session, package):  # update to get sdist to include other packages
+def add_package_to_spark(session, package_name):  # update to get sdist to include other packages
     """
     adds a python package to the spark context by package import
     :type session: pyspark.SparkSession
-    :param package: a python imported package
+    :param package_name: a python imported package name
     """
-    package_location = os.path.abspath(os.path.join(os.path.dirname(inspect.getabsfile(package)), '..'))
-    package_name = package.__name__
+    package_location = os.path.abspath(os.path.dirname(sys.modules[package_name].__file__))
     package_tar = shutil.make_archive(package_name, 'zip', package_location)
     _SPARK_PACKAGE_MANAGER[package_name] = package_tar
     session.sparkContext.addPyFile(package_tar)

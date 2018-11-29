@@ -54,9 +54,10 @@ def build_ami():
     region, subnet_id = terraform_vars['cluster_region'], terraform_vars['subnet_id']
     playbook_file = os.path.join(CLUSTER_DIR, 'ansible', 'playbooks', 'right_person_node.yml')
     packer_file = os.path.join(CLUSTER_DIR, 'packer', 'ami_builder.json')
-    print(run_system_shell_process(str(BUILD_AMI_FUNCTION.format(
+    command = str(BUILD_AMI_FUNCTION.format(
         region=region, subnet=subnet_id, playbook_file=playbook_file, packer_file=packer_file
-    ).replace('\n', ' ').strip())))
+    ).replace('\n', ' ').strip())
+    return run_system_shell_process(command, stdout=None, stderr=None)
 
 
 def terraform_validate():
@@ -84,11 +85,13 @@ def edit_cluster_settings():
                 terraform_vars = ujson.load(open(terraform_vars_temp_file.name))
                 state_s3_path, region = terraform_vars['cluster_state_bucket'], terraform_vars['cluster_region']
 
-                run_system_shell_process(str(_TERRAFORM_INIT_FUNCTION.format(
+                command = str(_TERRAFORM_INIT_FUNCTION.format(
                     cluster_state_bucket=state_s3_path, cluster_region=region, cluster_id='right_person_cluster_test',
                     input_location=TERRAFORM_DIRECTORY, terraform_state_location=terraform_state_location,
                     vars_file=terraform_vars_temp_file.name
-                ).replace('\n', ' ').strip()))
+                ).replace('\n', ' ').strip())
+
+                run_system_shell_process(command, stdout=None)
 
                 # TODO: fix bad validation
 
