@@ -163,7 +163,7 @@ class RightPersonProfileMiner(object):
 
         create_profile, serialise_profile = self.profile_building_functions()
 
-        session.read.csv(record_location, header=self.config.files_contain_headers, sep=self.config.delimiter).map(
+        session.read.csv(record_location, header=self.config.files_contain_headers, sep=self.config.delimiter).rdd.map(
             create_profile).reduceByKey(combine_profiles).filter(global_filter_profile).map(
             serialise_profile).saveAsTextFile(
             profile_save_location, compressionCodecClass="org.apache.hadoop.io.compress.GzipCodec")
