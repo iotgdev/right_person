@@ -198,7 +198,7 @@ class RightPersonProfileMiner(object):
     def profiles_exist_for_date(self, date):
 
         prefix = self.output_prefixes[date]
-        return len(list(get_s3_connection().Bucket(self.output_s3_bucket).objects.filter(Prefix=prefix))) > 1
+        return bool(list(get_s3_connection().Bucket(self.output_s3_bucket).objects.filter(Prefix=prefix)))
 
     def run(self, session):
 
