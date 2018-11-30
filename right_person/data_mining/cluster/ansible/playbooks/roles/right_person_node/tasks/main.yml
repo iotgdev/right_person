@@ -34,9 +34,9 @@
 
 
 - block:
-  - name: add /mnt/ directory
+  - name: add /mnt/spark directory
     file:
-      path: /mnt/
+      path: /mnt/spark
       owner: ubuntu
       group: ubuntu
       state: directory
