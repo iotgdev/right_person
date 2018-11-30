@@ -15,6 +15,7 @@
       - tcl
       - unzip
       - openjdk-8-jdk
+      - bc
 
   - name: Update pip, wheel, setuptools
     pip:
