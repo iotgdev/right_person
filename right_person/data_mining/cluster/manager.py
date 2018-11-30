@@ -27,7 +27,7 @@ from right_person.data_mining.cluster.utils import get_current_ipv4, run_system_
 logger = logging.getLogger('right_person.data_mining.cluster.manager')
 
 
-_TERRAFORM_INIT_FUNCTION = """bash -c "yes no || true" |
+_TERRAFORM_INIT_FUNCTION = """
 terraform init
 -backend-config 'bucket={cluster_state_bucket}'
 -backend-config 'region={cluster_region}'
@@ -108,7 +108,7 @@ def create_right_person_cluster(cluster_id):
 
     try:
 
-        run_system_shell_process(str(_TERRAFORM_INIT_FUNCTION.format(
+        run_system_shell_process(str('echo -e "no\nno" | ' + _TERRAFORM_INIT_FUNCTION.format(
             cluster_state_bucket=state_s3_path, cluster_region=region, cluster_id=cluster_id,
             input_location=TERRAFORM_DIRECTORY, terraform_state_location=terraform_state_location
         ).replace('\n', ' ').strip()))

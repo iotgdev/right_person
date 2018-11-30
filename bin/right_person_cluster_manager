@@ -27,7 +27,7 @@ packer build
 {packer_file}"""
 
 
-_TERRAFORM_INIT_FUNCTION = """bash -c "yes no || true" |
+_TERRAFORM_INIT_FUNCTION = """
 terraform init
 -backend-config 'bucket={cluster_state_bucket}'
 -backend-config 'region={cluster_region}'
@@ -85,7 +85,7 @@ def edit_cluster_settings():
                 terraform_vars = ujson.load(open(terraform_vars_temp_file.name))
                 state_s3_path, region = terraform_vars['cluster_state_bucket'], terraform_vars['cluster_region']
 
-                command = str(_TERRAFORM_INIT_FUNCTION.format(
+                command = str('echo -e "no\nno" | ' + _TERRAFORM_INIT_FUNCTION.format(
                     cluster_state_bucket=state_s3_path, cluster_region=region, cluster_id='right_person_cluster_test',
                     input_location=TERRAFORM_DIRECTORY, terraform_state_location=terraform_state_location,
                     vars_file=terraform_vars_temp_file.name
