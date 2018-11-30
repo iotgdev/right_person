@@ -65,7 +65,7 @@ def get_new_right_person_spark_session(master_ip):
     try:
         spark_context = SparkContext(conf=_get_right_person_spark_config(master_ip))
     except (Exception, ):  # stop any existing contexts, we don't want them...
-        logging.warning('A spark context exists already on this machine.')
+        logger.info('A spark context exists already on this machine.')
         SparkContext.getOrCreate().stop()
         spark_context = SparkContext(conf=_get_right_person_spark_config(master_ip))
 
