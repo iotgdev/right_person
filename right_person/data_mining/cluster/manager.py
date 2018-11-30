@@ -27,7 +27,7 @@ from right_person.data_mining.cluster.utils import get_current_ipv4, run_system_
 logger = logging.getLogger('right_person.data_mining.cluster.manager')
 
 
-_TERRAFORM_INIT_FUNCTION = """
+_TERRAFORM_INIT_FUNCTION = """yes no |
 terraform init
 -backend-config 'bucket={cluster_state_bucket}'
 -backend-config 'region={cluster_region}'
@@ -100,34 +100,39 @@ def create_right_person_cluster(cluster_id):
         return cluster_ip
 
     current_ip = get_current_ipv4()
+    master_ip = None
     terraform_state_location = tempfile.mkdtemp()
     plan_output_location = os.path.join(terraform_state_location, 'plan')
     terraform_vars = get_terraform_vars()
     state_s3_path, region = terraform_vars['cluster_state_bucket'], terraform_vars['cluster_region']
     ip_whitelist = terraform_vars.get('ip_whitelist', []) + [current_ip]
 
-    run_system_shell_process(str(_TERRAFORM_INIT_FUNCTION.format(
-        cluster_state_bucket=state_s3_path, cluster_region=region, cluster_id=cluster_id,
-        input_location=TERRAFORM_DIRECTORY, terraform_state_location=terraform_state_location
-    ).replace('\n', ' ').strip()))
+    try:
 
-    run_system_shell_process(str(_TERRAFORM_PLAN_FUNCTION.format(
-        plan_output_location=plan_output_location,
-        terraform_tfvars_json_file=TERRAFORM_VARS,
-        extended_ip_whitelist=ujson.dumps(ip_whitelist),
-        cluster_id=cluster_id,
-        terraform_state_location=os.path.join(terraform_state_location, '')
-    ).replace('\n', ' ').strip()))
+        run_system_shell_process(str(_TERRAFORM_INIT_FUNCTION.format(
+            cluster_state_bucket=state_s3_path, cluster_region=region, cluster_id=cluster_id,
+            input_location=TERRAFORM_DIRECTORY, terraform_state_location=terraform_state_location
+        ).replace('\n', ' ').strip()))
 
-    output = run_system_shell_process(str(_TERRAFORM_APPLY_FUNCTION.format(
-        plan_output_location=plan_output_location
-    ).replace('\n', ' ').strip()))
+        run_system_shell_process(str(_TERRAFORM_PLAN_FUNCTION.format(
+            plan_output_location=plan_output_location,
+            terraform_tfvars_json_file=TERRAFORM_VARS,
+            extended_ip_whitelist=ujson.dumps(ip_whitelist),
+            cluster_id=cluster_id,
+            terraform_state_location=os.path.join(terraform_state_location, '')
+        ).replace('\n', ' ').strip()))
 
-    # currently, terraform does not support operating the output
-    # command from a remote location. This is the workaround
-    master_ip = output.strip().split('\n')[-1].split('=')[-1].strip()
+        output = run_system_shell_process(str(_TERRAFORM_APPLY_FUNCTION.format(
+            plan_output_location=plan_output_location
+        ).replace('\n', ' ').strip()))
 
-    _CLUSTER_MANAGER[cluster_id] = master_ip, terraform_state_location
+        # currently, terraform does not support operating the output
+        # command from a remote location. This is the workaround
+        master_ip = output.strip().split('\n')[-1].split('=')[-1].strip()
+    except:
+        raise
+    finally:
+        _CLUSTER_MANAGER[cluster_id] = master_ip, terraform_state_location
     return master_ip
 
 

@@ -27,7 +27,7 @@ packer build
 {packer_file}"""
 
 
-_TERRAFORM_INIT_FUNCTION = """
+_TERRAFORM_INIT_FUNCTION = """yes no |
 terraform init
 -backend-config 'bucket={cluster_state_bucket}'
 -backend-config 'region={cluster_region}'

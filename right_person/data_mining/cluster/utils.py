@@ -27,7 +27,6 @@ No direct usage is expected.
 """
 from __future__ import unicode_literals
 
-import inspect
 import logging
 import os
 import shutil
