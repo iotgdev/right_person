@@ -188,6 +188,7 @@ data "template_file" "right_person-spark-slave-user_data" {
 
   vars {
     master_address = "${aws_instance.right_person-spark-master.private_ip}"
+    spark_max_mem_gb = "${var.slave_max_memory_gb}g"
   }
 }
 

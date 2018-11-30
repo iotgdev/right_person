@@ -48,6 +48,10 @@ variable "slave_instance_type" {
   type = "string"
 }
 
+variable "slave_max_memory_gb" {
+  type = "string"
+}
+
 variable "instance_additional_disk_space_gb" {
   type = "string"
   default = "0"

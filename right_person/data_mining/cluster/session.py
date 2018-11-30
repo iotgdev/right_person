@@ -16,6 +16,9 @@ from pyspark import SparkContext
 from pyspark.sql import SparkSession
 
 
+from right_person.data_mining.cluster.utils import get_terraform_vars
+
+
 _config = None
 
 
@@ -44,6 +47,7 @@ def _get_right_person_spark_config(master_ip):
 
         _config.set('spark.rdd.compress', 'True')
         _config.set('spark.driver.maxResultSize', '1g')
+        _config.set('spark.executor.memory', get_terraform_vars()['slave_max_memory_gb'] + "g")
 
         _config.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         # config.set("spark.executor.extraClassPath", )
