@@ -60,8 +60,9 @@ def build_ami():
     return run_system_shell_process(command, stdout=None, stderr=None)
 
 
-def terraform_validate():
+def terraform_validate():  # todo: finish this
     """validate the terraform running """
+    pass
 
 
 def edit_cluster_settings():
@@ -91,7 +92,7 @@ def edit_cluster_settings():
                     vars_file=terraform_vars_temp_file.name
                 ).replace('\n', ' ').strip())
 
-                run_system_shell_process(command, stdout=None)
+                run_system_shell_process(command)
 
                 # TODO: fix bad validation
 
