@@ -113,11 +113,27 @@ class RightPersonProfileMiner(object):
         """
 
         fields = self.config.fields
+
+        for field in fields:
+            field.true_type = eval(field.field_type)
+
         profile_field_id = self.config.profile_id_field
         storage_delimiter = self.storage_delimiter
 
+        def get_value_from_record(field, split_record):
+            value = field.true_type(*[split_record[i] for i in field.field_position])
+            return field.field_name, get_stored_value(field, value)
+
+        def get_stored_value(field, value):
+            if field.store_as == 'Counter':
+                return Counter([value])
+            if field.store_as == 'set':
+                return {value}
+            elif field.store_as is None:
+                return value
+
         def create_profile(record):
-            profile = dict([field.get_value_from_record(record) for field in fields] + [('c', 1)])
+            profile = dict([get_value_from_record(field, record) for field in fields] + [('c', 1)])
             return record[profile_field_id], profile
 
         def store_profile(user_profile):

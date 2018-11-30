@@ -102,19 +102,3 @@ class ProfileFieldConfig(object):  # todo: possibly remove this object?
         if stored_as not in valid_values:
             raise ValueError('invalid value for stored_as! should be in {}'.format(tuple(valid_values)))
         return stored_as
-
-    def get_value_from_record(self, split_record):  # todo: remove from this class and move to the miner?
-
-        value = self.get_true_value(split_record)
-        return self.field_name, self.get_stored_value(value)
-
-    def get_stored_value(self, value):
-        if self.store_as == 'Counter':
-            return Counter([value])
-        if self.store_as == 'set':
-            return {value}
-        elif self.store_as is None:
-            return value
-
-    def get_true_value(self, split_record):  # todo: investigate time complexity on this, shouldn't be this slow...
-        return eval(self.field_type)(*[split_record[i] for i in self.field_position])
