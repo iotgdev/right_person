@@ -27,7 +27,7 @@ from right_person.data_mining.cluster.utils import get_current_ipv4, run_system_
 logger = logging.getLogger('right_person.data_mining.cluster.manager')
 
 
-_TERRAFORM_INIT_FUNCTION = """yes no || true |
+_TERRAFORM_INIT_FUNCTION = """bash -c "yes no || true" |
 terraform init
 -backend-config 'bucket={cluster_state_bucket}'
 -backend-config 'region={cluster_region}'
