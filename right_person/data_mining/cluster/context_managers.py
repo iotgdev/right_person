@@ -19,6 +19,7 @@ from contextlib import contextmanager
 
 from right_person.data_mining.cluster.manager import create_right_person_cluster, destroy_right_person_cluster
 from right_person.data_mining.cluster.session import get_new_right_person_spark_session
+from right_person.data_mining.cluster.utils import add_package_to_spark
 
 logger = logging.getLogger('right_person.data_mining.cluster.context_managers')
 
@@ -35,6 +36,7 @@ def right_person_cluster_session(job_id):
     try:
         master_node_ip = create_right_person_cluster(job_id)
         spark_session = get_new_right_person_spark_session(master_ip=master_node_ip)
+        add_package_to_spark(spark_session, 'right_person')
         yield spark_session
     except:
         logger.exception('Right person session failed to run to completion!')
