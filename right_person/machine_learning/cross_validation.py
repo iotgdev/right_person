@@ -8,7 +8,7 @@ from itertools import product, repeat
 import copy
 from operator import itemgetter
 
-from right_person.machine_learning.evaluation import get_best_model, get_information_gain
+from right_person.machine_learning.evaluation import get_best_model, get_information_gain, TRAIN_TEST_RATIO
 from right_person.data_mining.profiles.transformations import union_profiles, flat_map_profiles, partition_profiles, \
     map_profile_partitions, collect_profiles
 from right_person.machine_learning.utils.functions import get_labelled_profiles, get_shuffled_training_data
@@ -59,6 +59,7 @@ def get_optimised_model(good_profiles, normal_profiles, model, cross_validation_
     labelled_normal_profiles = get_labelled_profiles(normal_profiles, 0)
 
     training_data = union_profiles(labelled_good_profiles, labelled_normal_profiles)
+    # todo: investigate shuffling the data here
 
     model_variants = [
         cv_model for model in get_candidate_models(model, hyperparameters)
@@ -72,7 +73,7 @@ def get_optimised_model(good_profiles, normal_profiles, model, cross_validation_
 
     trained_model_variants = map_profile_partitions(model_variant_training_data, model_variant_training_function)
 
-    return get_best_model(collect_profiles(trained_model_variants)) or model
+    return get_best_model(collect_profiles(trained_model_variants))
 
 
 def get_model_variant_training_function(models, cross_validation_folds):
@@ -88,10 +89,14 @@ def get_model_variant_training_function(models, cross_validation_folds):
         training_profiles, training_labels = zip(*map(itemgetter(1), training_data))
 
         seed = model_variant_index % cross_validation_folds
-        shuffled_profiles, shuffled_lables = get_shuffled_training_data(training_profiles, training_labels, seed)
-
         model = models[int(model_variant_index / cross_validation_folds)]
-        information_gain = get_information_gain(shuffled_profiles, shuffled_lables, model)
+
+        shuffled_profiles, shuffled_labels = get_shuffled_training_data(training_profiles, training_labels, seed)
+
+        while shuffled_labels[:int(len(training_data) * TRAIN_TEST_RATIO)].count(1) < model.audience_good_size / 2:
+            shuffled_profiles, shuffled_labels = get_shuffled_training_data(training_profiles, training_labels, seed)
+
+        information_gain = get_information_gain(shuffled_profiles, shuffled_labels, model)
 
         return [(model, information_gain)]
 

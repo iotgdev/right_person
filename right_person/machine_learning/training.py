@@ -5,10 +5,15 @@ Functions to train (start to finish, including cross validation) right person mo
 """
 from __future__ import unicode_literals
 
+import logging
+
 
 from right_person.machine_learning.cross_validation import get_optimised_model
 from right_person.data_mining.profiles.transformations import filter_profiles, sample_profiles, map_profiles, \
     count_profiles
+
+
+logger = logging.getLogger('right_person.machine_learning.training')
 
 
 def train_model(audience, model, cross_validation_folds=1, hyperparameters=None):
@@ -25,6 +30,10 @@ def train_model(audience, model, cross_validation_folds=1, hyperparameters=None)
     # we have to filter the good users from the target group for training purposes
     good_set = filter_profiles(audience, lambda (user_id, profile): user_id in model.good_users)
     model.audience_good_size = count_profiles(good_set)
+
+    if not model.audience_good_size:
+        logger.exception('model {} cannot be trained - no good users found in audience'.format(model.name))
+        return
 
     normal_set = sample_profiles(audience, model.downsampling_rate)
 
