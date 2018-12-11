@@ -178,6 +178,20 @@ resource "aws_security_group" "right_person-spark-node" {
     self = true
   }
 
+  ingress {
+    from_port = 50070
+    protocol = "tcp"
+    to_port = 50070
+    security_groups = ["${aws_security_group.right_person-spark-master.id}"]
+  }
+
+  egress {
+    from_port = 50070
+    protocol = "tcp"
+    to_port = 50070
+    security_groups = ["${aws_security_group.right_person-spark-master.id}"]
+  }
+
   ingress {  # for the task scheduler (intra-node connectivity)
     from_port = 45523
     protocol = "tcp"
@@ -190,6 +204,20 @@ resource "aws_security_group" "right_person-spark-node" {
     protocol = "tcp"
     to_port = 45523
     self = true
+  }
+
+  ingress {
+    from_port = 45523
+    protocol = "tcp"
+    to_port = 45523
+    security_groups = ["${aws_security_group.right_person-spark-master.id}"]
+  }
+
+  egress {
+    from_port = 45523
+    protocol = "tcp"
+    to_port = 45523
+    security_groups = ["${aws_security_group.right_person-spark-master.id}"]
   }
 
 
