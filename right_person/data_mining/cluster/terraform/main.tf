@@ -136,25 +136,13 @@ resource "aws_security_group" "right_person-spark-node" {
     Cluster = "${var.cluster_id}"
   }
 
-  ingress {  # driver and whitelist can connect to spark
-    from_port = 7077
-    protocol = "tcp"
-    to_port = 7077
-    cidr_blocks = "${formatlist("%s/32", var.ip_whitelist)}"
-  }
-
-  egress {  # spark available to driver and whitelist
-    from_port = 7077
-    protocol = "tcp"
-    to_port = 7077
-    cidr_blocks = "${formatlist("%s/32", var.ip_whitelist)}"
-  }
-
   ingress {
     from_port = 7077
     protocol = "tcp"
     to_port = 7077
     self = true
+    cidr_blocks = "${formatlist("%s/32", var.ip_whitelist)}"
+    security_groups = ["${data.aws_security_group.selected_additional_groups.id}"]
   }
 
   egress {
@@ -162,6 +150,8 @@ resource "aws_security_group" "right_person-spark-node" {
     protocol = "tcp"
     to_port = 7077
     self = true
+    cidr_blocks = "${formatlist("%s/32", var.ip_whitelist)}"
+    security_groups = ["${data.aws_security_group.selected_additional_groups.id}"]
   }
 
   ingress {  # for the block manager (intra-node connectivity)
@@ -169,6 +159,8 @@ resource "aws_security_group" "right_person-spark-node" {
     protocol = "tcp"
     to_port = 50070
     self = true
+    cidr_blocks = "${formatlist("%s/32", var.ip_whitelist)}"
+    security_groups = ["${data.aws_security_group.selected_additional_groups.id}"]
   }
 
   egress {
@@ -176,20 +168,8 @@ resource "aws_security_group" "right_person-spark-node" {
     protocol = "tcp"
     to_port = 50070
     self = true
-  }
-
-  ingress {
-    from_port = 50070
-    protocol = "tcp"
-    to_port = 50070
-    security_groups = ["${aws_security_group.right_person-spark-master.id}"]
-  }
-
-  egress {
-    from_port = 50070
-    protocol = "tcp"
-    to_port = 50070
-    security_groups = ["${aws_security_group.right_person-spark-master.id}"]
+    cidr_blocks = "${formatlist("%s/32", var.ip_whitelist)}"
+    security_groups = ["${data.aws_security_group.selected_additional_groups.id}"]
   }
 
   ingress {  # for the task scheduler (intra-node connectivity)
@@ -197,6 +177,8 @@ resource "aws_security_group" "right_person-spark-node" {
     protocol = "tcp"
     to_port = 45523
     self = true
+    cidr_blocks = "${formatlist("%s/32", var.ip_whitelist)}"
+    security_groups = ["${data.aws_security_group.selected_additional_groups.id}"]
   }
 
   egress {
@@ -204,36 +186,8 @@ resource "aws_security_group" "right_person-spark-node" {
     protocol = "tcp"
     to_port = 45523
     self = true
-  }
-
-  ingress {
-    from_port = 45523
-    protocol = "tcp"
-    to_port = 45523
-    security_groups = ["${aws_security_group.right_person-spark-master.id}"]
-  }
-
-  egress {
-    from_port = 45523
-    protocol = "tcp"
-    to_port = 45523
-    security_groups = ["${aws_security_group.right_person-spark-master.id}"]
-  }
-
-
-
-  ingress {
-    from_port = 7077
-    protocol = "tcp"
-    to_port = 7077
-    security_groups = ["${aws_security_group.right_person-spark-master.id}"]
-  }
-
-  egress {
-    from_port = 7077
-    protocol = "tcp"
-    to_port = 7077
-    security_groups = ["${aws_security_group.right_person-spark-master.id}"]
+    cidr_blocks = "${formatlist("%s/32", var.ip_whitelist)}"
+    security_groups = ["${data.aws_security_group.selected_additional_groups.id}"]
   }
 }
 
