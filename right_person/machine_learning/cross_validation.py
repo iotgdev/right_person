@@ -93,7 +93,7 @@ def get_model_variant_training_function(models, cross_validation_folds):
 
         shuffled_profiles, shuffled_labels = get_shuffled_training_data(training_profiles, training_labels, seed)
 
-        while shuffled_labels[:int(len(training_data) * TRAIN_TEST_RATIO)].count(1) < model.audience_good_size / 2:
+        while shuffled_labels[:int(len(training_profiles) * TRAIN_TEST_RATIO)].count(1) < model.audience_good_size / 2:
             shuffled_profiles, shuffled_labels = get_shuffled_training_data(training_profiles, training_labels, seed)
 
         information_gain = get_information_gain(shuffled_profiles, shuffled_labels, model)
