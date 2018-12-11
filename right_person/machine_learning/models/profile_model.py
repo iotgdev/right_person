@@ -38,6 +38,7 @@ class RightPersonModel(object):
 
         self.classifier = LogisticRegression(C=1, fit_intercept=False, penalty='l2')
         self._predictor = LogisticRegressionModel([], 0, HASH_SIZE, 2)
+        self._predictor.clearThreshold()
 
         self.config = RightPersonModelConfig([], [], [], 10.0)
 
@@ -120,7 +121,8 @@ class RightPersonModel(object):
         self.classifier.coef_ = numpy.array(coef)
 
         self._predictor = LogisticRegressionModel(
-            weights=self.classifier.coef_.tolist(), intercept=self.intercept, numFeatures=num_features, numClasses=2)
+            weights=self.classifier.coef_[0].tolist(), intercept=self.intercept, numFeatures=num_features, numClasses=2)
+        self._predictor.clearThreshold()
 
     def partial_fit(self, profiles, labels):
         """
@@ -134,6 +136,7 @@ class RightPersonModel(object):
 
         self._predictor = LogisticRegressionModel(
             self.classifier.coef_[0].tolist(), self.intercept, self._predictor.numFeatures, 2)
+        self._predictor.clearThreshold()
 
     def good_filter_function(self):
         """
