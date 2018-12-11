@@ -32,6 +32,7 @@ def train_model(audience, model, cross_validation_folds=1, hyperparameters=None)
     model.audience_good_size = count_profiles(good_set)
 
     if not model.audience_good_size:
+        print model.audience_good_size
         logger.exception('model {} cannot be trained - no good users found in audience'.format(model.name))
         return
 

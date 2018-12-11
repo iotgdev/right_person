@@ -39,7 +39,7 @@ def get_information_gain(data, labels, model):
     :rtype: float
     :returns: the information gain from the machine_learning
     """
-    num_training_sets = int(len(data) * TRAIN_TEST_RATIO)
+    num_training_sets = int(len(data) * (1 - TRAIN_TEST_RATIO))
     train_data = data[num_training_sets:], labels[num_training_sets:]
 
     model.partial_fit(*train_data)
