@@ -44,6 +44,7 @@ def _get_right_person_spark_config(master_ip):
 
         _config.set('spark.blockManager.port', '50070')
         _config.set('spark.driver.port', '45523')
+        _config.set('spark.port.maxRetries', '0')
 
         _config.set('spark.rdd.compress', 'True')
         _config.set('spark.driver.maxResultSize', '1g')

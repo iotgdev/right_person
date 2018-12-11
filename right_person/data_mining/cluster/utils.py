@@ -98,7 +98,7 @@ def get_terraform_vars():
     return ujson.load(open(TERRAFORM_VARS))
 
 
-def add_package_to_spark(session, package_name):  # update to get sdist to include other packages
+def add_package_to_spark(session, package_name):  # todo: refocus around the class rather than the function
     """
     adds a python package to the spark context by package import
     :type session: pyspark.SparkSession

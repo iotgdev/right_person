@@ -164,6 +164,36 @@ resource "aws_security_group" "right_person-spark-node" {
     self = true
   }
 
+  ingress {  # for the block manager (intra-node connectivity)
+    from_port = 50070
+    protocol = "tcp"
+    to_port = 50070
+    self = true
+  }
+
+  egress {
+    from_port = 50070
+    protocol = "tcp"
+    to_port = 50070
+    self = true
+  }
+
+  ingress {  # for the task scheduler (intra-node connectivity)
+    from_port = 45523
+    protocol = "tcp"
+    to_port = 45523
+    self = true
+  }
+
+  egress {
+    from_port = 45523
+    protocol = "tcp"
+    to_port = 45523
+    self = true
+  }
+
+
+
   ingress {
     from_port = 7077
     protocol = "tcp"
