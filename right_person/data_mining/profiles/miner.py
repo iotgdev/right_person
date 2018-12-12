@@ -50,7 +50,7 @@ class RightPersonProfileMiner(object):
     @property
     def dates(self):
         """Get the dates of the job. Not available until the run_date is set"""
-        return sorted(self.run_date - datetime.timedelta(days=i) for i in range(self.data_max_age))
+        return sorted(self.run_date - datetime.timedelta(days=i) for i in range(1, self.data_max_age + 1))
 
     @property
     def input_prefixes(self):
@@ -193,7 +193,8 @@ class RightPersonProfileMiner(object):
         profiles = ','.join([self.profile_output_location(date) for date in self.dates])
         load_profile = self.profile_loading_functions()
 
-        return session.sparkContext.textFile(profiles).map(load_profile).reduceByKey(combine_profiles)
+        return session.sparkContext.textFile(profiles).map(load_profile).reduceByKey(combine_profiles).filter(
+            global_filter_profile)
 
     def profiles_exist_for_date(self, date):
 
