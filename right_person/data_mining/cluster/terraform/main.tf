@@ -245,5 +245,9 @@ resource "aws_instance" "right_person-spark-slave" {
     Role = "right_person-${var.cluster_id}-slave-instance"
     Cluster = "${var.cluster_id}"
   }
+  timeouts {
+    create = "5m"
+    delete = "5m"
+  }
   count = "${var.slave_count}"
 }
