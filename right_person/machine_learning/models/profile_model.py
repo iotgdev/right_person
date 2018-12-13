@@ -127,8 +127,11 @@ class RightPersonModel(object):
         :param list[dict] profiles: the data_miners to use for utilities
         :param list[int] labels: the corresponding labels (0 or 1) for the data_miners
         """
+        print('making vectors')
         vectors = [get_right_person_vector(profile, self.config.features) for profile in profiles]
+        print('making matrix')
         matrix = combine_vectors(vectors)
+        print('fitting')
         self.classifier.fit(matrix, labels)
 
         self._predictor = LogisticRegressionModel(
