@@ -38,10 +38,10 @@ def train_model(audience, model, cross_validation_folds=1, hyperparameters=None)
 
     normal_set = sample_profiles(audience, model.downsampling_rate)
 
-    good_profiles = map_profiles(good_set, lambda (user_id, profile): profile)
-    normal_profiles = map_profiles(normal_set, lambda (user_id, profile): profile)
+    labelled_good_profiles = map_profiles(good_set, lambda (user_id, profile): (profile, 1))
+    labelled_normal_profiles = map_profiles(normal_set, lambda (user_id, profile): (profile, 0))
 
     optimised_model = get_optimised_model(
-        good_profiles, normal_profiles, model, cross_validation_folds, hyperparameters or {})
+        labelled_good_profiles, labelled_normal_profiles, model, cross_validation_folds, hyperparameters or {})
 
     return optimised_model

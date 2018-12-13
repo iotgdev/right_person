@@ -11,7 +11,7 @@ from operator import itemgetter
 from right_person.machine_learning.evaluation import get_best_model, get_information_gain, TRAIN_TEST_RATIO
 from right_person.data_mining.profiles.transformations import union_profiles, flat_map_profiles, partition_profiles, \
     map_profile_partitions, collect_profiles
-from right_person.machine_learning.utils.functions import get_labelled_profiles, get_shuffled_training_data
+from right_person.machine_learning.utils.functions import get_shuffled_training_data
 
 
 def get_hyperparameter_combinations(hyperparams):
@@ -44,7 +44,7 @@ def get_candidate_models(model, hyperparameters):
     return models or [model]
 
 
-def get_optimised_model(good_profiles, normal_profiles, model, cross_validation_folds, hyperparameters):
+def get_optimised_model(labelled_good, labelled_normal, model, cross_validation_folds, hyperparameters):
     """
     Gets an optimised right_person model for some given profile data, cross validation folds and hyperparameters
     :type good_profiles: list|pyspark.RDD
@@ -55,10 +55,7 @@ def get_optimised_model(good_profiles, normal_profiles, model, cross_validation_
     :rtype: RightPersonModel|None
     """
 
-    labelled_good_profiles = get_labelled_profiles(good_profiles, 1)
-    labelled_normal_profiles = get_labelled_profiles(normal_profiles, 0)
-
-    training_data = union_profiles(labelled_good_profiles, labelled_normal_profiles)
+    training_data = union_profiles(labelled_good, labelled_normal)
     # todo: investigate shuffling the data here
 
     model_variants = [

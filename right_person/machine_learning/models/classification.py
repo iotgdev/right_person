@@ -27,7 +27,7 @@ def get_right_person_vector(profile, valid_features):
     for feature, values in profile.items():
         if feature in valid_features:
             flat_feature = flatten_profile_feature(feature, values)
-            features.add(mmh3.hash(flat_feature) % HASH_SIZE)
+            features.update([mmh3.hash(flat_feature) % HASH_SIZE for f in flat_feature])
 
     return sorted(features)
 
