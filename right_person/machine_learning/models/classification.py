@@ -14,19 +14,22 @@ from scipy.sparse import coo_matrix
 HASH_SIZE = 1000000
 
 
-def get_right_person_vector(profile):
+def get_right_person_vector(profile, valid_features):
     """
     Creates a sparse vector from a profile
     :type profile: dict
+    :type valid_features: list|set
     :rtype: list
     """
 
-    features = []
+    features = set()
 
     for feature, values in profile.items():
-        features.extend(flatten_profile_feature(feature, values))
+        if feature in valid_features:
+            flat_feature = flatten_profile_feature(feature, values)
+            features.add(mmh3.hash(flat_feature) % HASH_SIZE)
 
-    return sorted({mmh3.hash(feature) % HASH_SIZE for feature in features})
+    return sorted(features)
 
 
 def flatten_profile_feature(feature, values):

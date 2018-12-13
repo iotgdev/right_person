@@ -70,9 +70,6 @@ class RightPersonModel(object):
         else:
             return 0
 
-    def clean_profile(self, profile):
-        return {k: v for k, v in profile.items() if k in self.config.features}
-
     def predict(self, profile):
         """
         Predicts the probability of a profile being "positive"
@@ -80,7 +77,7 @@ class RightPersonModel(object):
         :rtype: float
         :return: probability of good
         """
-        vector = get_right_person_vector(self.clean_profile(profile))
+        vector = get_right_person_vector(profile, self.config.features)
         return self._predictor.predict(SparseVector(self._predictor.numFeatures, sorted(vector), [1] * len(vector)))
 
     def serialize(self):
@@ -130,7 +127,7 @@ class RightPersonModel(object):
         :param list[dict] profiles: the data_miners to use for utilities
         :param list[int] labels: the corresponding labels (0 or 1) for the data_miners
         """
-        vectors = [get_right_person_vector(self.clean_profile(profile)) for profile in profiles]
+        vectors = [get_right_person_vector(profile, self.config.features) for profile in profiles]
         matrix = combine_vectors(vectors)
         self.classifier.fit(matrix, labels)
 
