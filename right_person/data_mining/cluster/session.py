@@ -47,8 +47,8 @@ def _get_right_person_spark_config(master_ip):
         _config.set('spark.port.maxRetries', '0')
 
         _config.set('spark.rdd.compress', 'True')
-        _config.set('spark.driver.maxResultSize', '2g')
-        _config.set('spark.driver.memory', '2g')
+        _config.set('spark.driver.maxResultSize', '1.5g')
+        _config.set('spark.driver.memory', '1.5g')
         _config.set('spark.executor.memory', get_terraform_vars()['slave_max_memory_gb'] + "g")
 
         _config.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
