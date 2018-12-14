@@ -12,8 +12,7 @@ These objects should only be used by a RightPersonTrainingJob
 from __future__ import unicode_literals
 
 
-from collections import Counter
-from right_person.config.base_classes import AttributeCleaningMetaclass
+from right_person.utilities.base_classes import AttributeCleaningMetaclass
 
 
 class ProfileDocumentConfig(object):

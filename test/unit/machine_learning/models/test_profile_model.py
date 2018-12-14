@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from right_person.machine_learning.models.profile_model import RightPersonModel
+from right_person.machine_learning.models import RightPersonModel
 
 
 class TestRightPersonModel(unittest.TestCase):

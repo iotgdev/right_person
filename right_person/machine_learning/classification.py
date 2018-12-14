@@ -54,13 +54,13 @@ def combine_vectors(vectors):
     :type vectors: list
     :rtype: numpy.array
     """
-    print('matrix - creating variables')
     column_indexes = []
     row_indexes = []
+
     map(column_indexes.extend, vectors)  # super speedy speed round
     map(row_indexes.extend, ([i] * len(j) for i, j in enumerate(vectors)))
+
     data = [True] * len(column_indexes)
-    print('matrix - creating matrix')
     matrix = coo_matrix((data, (row_indexes, column_indexes)), shape=(len(vectors), HASH_SIZE), dtype=bool)
-    print('matrix - tocsr?')
+
     return matrix.tocsr()

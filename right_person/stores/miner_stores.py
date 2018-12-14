@@ -19,11 +19,6 @@ import ulid
 from right_person.utilities.connections import get_s3_connection
 
 
-def get_job_directory(prefix, miner_id):
-    """Get the location of the job code"""
-    return '/'.join((prefix, 'profile_miners', miner_id))
-
-
 class S3ProfileMinerStore(object):
 
     MINER_PARAMS = 'MINER_PARAMS'
@@ -91,7 +86,7 @@ class S3ProfileMinerStore(object):
         Delete a mining job reference (does not delete mined resources)
         :type miner_id: str
         """
-        location = get_job_directory(self.s3_prefix, miner_id)
+        location = '/'.join((self.s3_prefix, miner_id))
         for obj in get_s3_connection().Bucket(self.s3_bucket).objects.filter(Prefix=location):
             self._delete_key(obj.key)
 
@@ -99,12 +94,12 @@ class S3ProfileMinerStore(object):
 
     def _set_json(self, miner_id, location, data):
         """saves a json document to s3"""
-        file_path = get_job_directory(self.s3_prefix, miner_id) + '/{}.json'.format(location)
+        file_path = '/'.join((self.s3_prefix, miner_id)) + '/{}.json'.format(location)
         self._create_key(file_path, body=ujson.dumps(data))
 
     def _get_json(self, miner_id, location):
         """gets a json document from s3"""
-        file_path = get_job_directory(self.s3_prefix, miner_id) + '/{}.json'.format(location)
+        file_path = '/'.join((self.s3_prefix, miner_id, '{}.json'.format(location)))
         obj = get_s3_connection().Object(self.s3_bucket, file_path)
 
         return ujson.loads(obj.get()['Body'].read())

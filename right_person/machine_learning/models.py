@@ -11,18 +11,15 @@ Usage:
 """
 from __future__ import unicode_literals
 
-import datetime
-from collections import Counter
-
 import numpy
 from numpy import log
 from pyspark.mllib.classification import LogisticRegressionModel
 from pyspark.mllib.linalg import SparseVector
 from sklearn.linear_model import LogisticRegression
 
-from right_person.machine_learning.models.classification import combine_vectors
-from right_person.machine_learning.models.classification import get_right_person_vector, HASH_SIZE
-from right_person.machine_learning.models.config import RightPersonModelConfig
+from right_person.machine_learning.classification import combine_vectors
+from right_person.machine_learning.classification import get_right_person_vector, HASH_SIZE
+from right_person.machine_learning.config import RightPersonModelConfig
 
 MAX_TRAINING_SET_SIZE = 100000
 ID_DELIMITER = ':'
@@ -127,85 +124,11 @@ class RightPersonModel(object):
         :param list[dict] profiles: the data_miners to use for utilities
         :param list[int] labels: the corresponding labels (0 or 1) for the data_miners
         """
-        print('making vectors')
         vectors = [get_right_person_vector(profile, self.config.features) for profile in profiles]
-        print('making matrix')
         matrix = combine_vectors(vectors)
-        print('fitting')
+
         self.classifier.fit(matrix, labels)
 
         self._predictor = LogisticRegressionModel(
             self.classifier.coef_[0].tolist(), self.intercept, self._predictor.numFeatures, 2)
         self._predictor.clearThreshold()
-
-    def good_filter_function(self):
-        """
-        returns a function that identifies whether a particular
-        record (unknown type) should be included in the good training definition
-        :rtype: Callable
-        """
-
-        good_definition = self.config.good_definition
-
-        def filter_is_good(filterer, record, record_age):
-            """
-            Checks if a record passes a good filter check
-            :type filterer: right_person.machine_learning.models.config.ModelSignatureFilter
-            :type record: dict|list|tuple
-            :type record_age: datetime.datetime
-            :rtype: bool
-            """
-            now = datetime.datetime.today()
-            field_type = type(filterer.field_value)
-
-            if filterer.field_value != field_type(record[filterer.field_name]):
-                return False
-            if filterer.record_max_age and now - record_age > datetime.timedelta(days=filterer.record_max_age):
-                return False
-            return True
-
-        def record_is_good(record, record_age):
-            """
-            Checks if a record can be considered good as per the machine_learning good signature
-            :param dict|list record: the record to evaluate, may be list of values, may be dict
-            :param datetime.datetime record_age: the age of the record being evaluated
-            :rtype: bool
-            :return: whether or not the record should be included in the definition of good
-            """
-            return any(filter_is_good(filterer, record, record_age) for filterer in good_definition)
-
-        return record_is_good
-
-    def audience_filter_function(self):
-        """
-        returns a function that identifies whether a particular
-        profile should be included in the models training definition
-        :rtype: Callable
-        """
-
-        normal_filters = {field.field_name: field.field_value for field in self.config.audience}
-
-        def feature_matches_profile(normal_definition_value, profile_value):
-
-            if isinstance(profile_value, bool):
-                return normal_definition_value == profile_value
-            elif isinstance(profile_value, (Counter, dict, set)):
-                return normal_definition_value in profile_value
-            else:
-                field_type = type(normal_definition_value)
-                return field_type(normal_definition_value) == field_type(profile_value)
-
-        # noinspection PyUnusedLocal
-        def profile_in_audience(user_profile):
-            user_id, profile = user_profile
-
-            for field, value in normal_filters.items():
-                if field not in profile:
-                    return False
-
-                if not feature_matches_profile(value, profile[field]):
-                    return False
-
-            return True
-
-        return profile_in_audience

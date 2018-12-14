@@ -11,7 +11,7 @@ These classes should only be used by the RightPersonModel class
 """
 from __future__ import unicode_literals
 
-from right_person.config.base_classes import AttributeCleaningMetaclass
+from right_person.utilities.base_classes import AttributeCleaningMetaclass
 
 
 class RightPersonModelConfig(object):
@@ -40,16 +40,16 @@ class RightPersonModelConfig(object):
     @staticmethod
     def clean_good_definition(signature_filters):
         try:
-            return [f if isinstance(f, ModelSignatureFilter) else ModelSignatureFilter(**f) for f in signature_filters]
+            return [f if isinstance(f, ModelConfigFilter) else ModelConfigFilter(**f) for f in signature_filters]
         except:
-            raise ValueError('invalid traits! should be list of {}'.format(ModelSignatureFilter.__name__))
+            raise ValueError('invalid traits! should be list of {}'.format(ModelConfigFilter.__name__))
 
     @staticmethod
     def clean_audience(signature_filters):
         try:
-            return [f if isinstance(f, ModelSignatureFilter) else ModelSignatureFilter(**f) for f in signature_filters]
+            return [f if isinstance(f, ModelConfigFilter) else ModelConfigFilter(**f) for f in signature_filters]
         except:
-            raise ValueError('invalid filter conditions! should be list of {}'.format(ModelSignatureFilter.__name__))
+            raise ValueError('invalid filter conditions! should be list of {}'.format(ModelConfigFilter.__name__))
 
     @staticmethod
     def clean_max_ratio(max_ratio):
@@ -59,7 +59,7 @@ class RightPersonModelConfig(object):
             raise ValueError('max ratio should be a float {}'.format(max_ratio))
 
 
-class ModelSignatureFilter(object):
+class ModelConfigFilter(object):
     """
     Defines a filter for a signature definition
     Either describes a filter in generating a list of good profile_ids (good signature)

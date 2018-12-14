@@ -49,7 +49,7 @@ def get_information_gain(data, labels, model):
     return 1 - log_loss(predictions, labels[:num_training_sets], mean(labels))
 
 
-def get_best_model(model_scores):
+def get_best_model(model_scores):  # todo: refactor so only a list of models gets passed in, this is a stupid function
     """
     finds the best model given various hyperparameter blends and cross validation folds
     :param list[tuple[RightPersonModel, float]] model_scores: a list of right person model variants and their

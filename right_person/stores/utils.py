@@ -6,7 +6,7 @@ utility functions to manage right person stores
 from __future__ import unicode_literals
 
 
-from right_person.machine_learning.models.profile_model import RightPersonModel
+from right_person.machine_learning.models import RightPersonModel
 from right_person.data_mining.profiles.miner import RightPersonProfileMiner
 from right_person.stores.model_stores import S3RightPersonModelStore
 from right_person.stores.miner_stores import S3ProfileMinerStore

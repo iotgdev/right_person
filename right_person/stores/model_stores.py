@@ -11,18 +11,13 @@ import datetime
 
 import logging
 
-from right_person.machine_learning.models.profile_model import ID_DELIMITER
+from right_person.machine_learning.models import ID_DELIMITER
 from right_person.utilities.connections import get_s3_connection
 
 _VERSION_DELIMITER = '-'
 
 
 logger = logging.getLogger('right_person.stores.model_stores')
-
-
-def get_model_directory(prefix, model_id):
-    """Get the location of the machine_learning prefixes"""
-    return '/'.join((prefix, 'models', model_id))
 
 
 def get_next_version(version=None):
@@ -38,7 +33,7 @@ def get_next_version(version=None):
     try:
         ver_parts = [int(part) for part in version.split(_VERSION_DELIMITER)]
     except AttributeError:
-        logger.warning('error when creating new version from {}'.format(version))
+        logger.info('error when creating new version from {}'.format(version))
         ver_parts = [0, 0, 0, 0]
 
     if ver_parts[0:3] == [today.year, today.month, today.day]:
@@ -72,7 +67,7 @@ class S3RightPersonModelStore(object):
         :param str model_id: model_index:version
         """
         index, version = model_id.split(ID_DELIMITER)
-        model_prefix = get_model_directory(self.s3_prefix, '{}/{}'.format(index, version))
+        model_prefix = '/'.join((self.s3_prefix, '{}/{}'.format(index, version)))
 
         model_params = self._get_json(model_prefix, self.MODEL_PARAMS)
         classifier_params = self._get_json(model_prefix, self.CLASSIFIER_PARAMS)
@@ -163,7 +158,7 @@ class S3RightPersonModelStore(object):
         Delete a machine_learning from the store
         :param str model_id: model_index:model_version
         """
-        location = get_model_directory(self.s3_prefix, model_id)
+        location = '/'.join((self.s3_prefix, model_id))
         for obj in get_s3_connection().Bucket(self.s3_bucket).objects.filter(Prefix=location):
             self._delete_key(obj.key)
 
@@ -176,7 +171,7 @@ class S3RightPersonModelStore(object):
         :param str|unicode location: path of the file on s3
         :param dict|list data: the data body
         """
-        file_path = get_model_directory(self.s3_prefix, model_id) + '/{}.json'.format(location)
+        file_path = '/'.join((self.s3_prefix, model_id, '{}.json'.format(location)))
         self._create_key(file_path, body=ujson.dumps(data))
 
     def _get_json(self, model_id, location):
@@ -186,7 +181,7 @@ class S3RightPersonModelStore(object):
         :param str|unicode location: path of the file on s3
         :rtype: dict|list
         """
-        file_path = get_model_directory(self.s3_prefix, model_id) + '/{}.json'.format(location)
+        file_path = '/'.join((self.s3_prefix, model_id, '{}.json'.format(location)))
         obj = get_s3_connection().Object(self.s3_bucket, file_path)
 
         return ujson.loads(obj.get()['Body'].read())

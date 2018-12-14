@@ -20,4 +20,4 @@ class TestGetNextVersion(unittest.TestCase):
         with mock.patch(MODULE_IMPORT_LOCATION + 'logger') as logger, \
                 mock.patch(MODULE_IMPORT_LOCATION + 'datetime', new=datetime_mock):
             self.assertEqual(get_next_version(), "2018-01-01-00")
-            self.assertTrue(logger.warning.called)
+            self.assertTrue(logger.info.called)

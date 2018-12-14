@@ -7,7 +7,7 @@ import unittest
 
 import mock
 
-from right_person.machine_learning.models.config import RightPersonModelConfig, ModelSignatureFilter
+from right_person.machine_learning.config import RightPersonModelConfig, ModelConfigFilter
 
 
 class TestRightPersonModelConfig(unittest.TestCase):
@@ -29,4 +29,4 @@ class TestModelSignatureFilter(unittest.TestCase):
 
     def test_clean_record_max_age_fail(self):
         with self.assertRaises(ValueError):
-            ModelSignatureFilter.clean_record_max_age(10.0)
+            ModelConfigFilter.clean_record_max_age(10.0)
