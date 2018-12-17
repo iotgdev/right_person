@@ -178,7 +178,7 @@ class RightPersonProfileMiner(object):
         profile_save_location = self.profile_output_location(date)
 
         create_profile, serialise_profile = self.profile_building_functions
-        profile_delimiter = self.config.delimiter
+        profile_delimiter = str(self.config.delimiter)
 
         raw_files = session.sparkContext.textFile(record_location)
 
