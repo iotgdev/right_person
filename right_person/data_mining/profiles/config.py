@@ -89,10 +89,8 @@ class ProfileFieldConfig(object):  # todo: possibly remove this object?
 
     @staticmethod
     def clean_field_position(field_position):
-        if isinstance(field_position, int):
+        if isinstance(field_position, (int, str)):
             field_position = [field_position]
-        if any(not isinstance(i, int) for i in field_position):
-            raise ValueError('field_position must be int!')
         return field_position
 
     @staticmethod
