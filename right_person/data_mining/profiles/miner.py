@@ -184,7 +184,8 @@ class RightPersonProfileMiner(object):
         raw_files = session.sparkContext.textFile(record_location)
 
         if self.config.files_contain_headers:
-            raw_files = raw_files.mapPartitionsWithIndex(lambda idx, it: islice(it, 1, None) if idx == 0 else it)
+            header = raw_files.first()
+            raw_files = raw_files.filter(lambda x: x != header)
 
         raw_files.map(lambda line: create_profile(csv.reader([line], delimiter=profile_delimiter).next())).reduceByKey(
             combine_profiles).filter(global_filter_profile).map(serialise_profile).saveAsTextFile(
