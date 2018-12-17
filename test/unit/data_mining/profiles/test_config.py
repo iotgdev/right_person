@@ -19,10 +19,6 @@ class TestProfileFieldConfig(unittest.TestCase):
     def test_clean_field_position_pass(self):
         self.assertEqual(ProfileFieldConfig.clean_field_position(1), [1])
 
-    def test_clean_field_position_fail(self):
-        with self.assertRaises(ValueError):
-            ProfileFieldConfig.clean_field_position('asdf')
-
     def test_clean_store_as_fail(self):
         with self.assertRaises(ValueError):
             ProfileFieldConfig.clean_store_as('test')
