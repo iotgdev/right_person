@@ -14,16 +14,17 @@ Usage:
 ...:    miner.run(session)
 """
 from __future__ import unicode_literals
+
+import csv
 import datetime
 import os
 import ujson
-from collections import Counter
+from collections import Counter, namedtuple
 
 from right_person.data_mining.cluster.utils import get_spark_s3_files
 from right_person.data_mining.profiles.config import ProfileDocumentConfig
 from right_person.data_mining.profiles.transformations import combine_profiles, global_filter_profile
 from right_person.utilities.connections import get_s3_connection
-
 
 PROFILE_DAYS = 7
 
@@ -63,6 +64,68 @@ class RightPersonProfileMiner(object):
         date_prefix = os.path.join('right_person', 'profiles', self.config.doc_name, '%Y/%m/%d/')
         return {date: date.strftime(date_prefix) for date in self.dates}
 
+    @property
+    def profile_building_functions(self):
+        """
+        This function returns functions (that can be serialized) for the spark job to create profiles
+        they do not contain references to self, and so can be easily serialised by spark.
+        :returns: a function to create profiles and a function to store them
+        """
+
+        fields = self.config.fields
+
+        for f in fields:
+            f.true_type = eval(f.field_type)
+
+        profile_field_id = self.config.profile_id_field
+        storage_delimiter = self.storage_delimiter
+
+        def get_value_from_record(field, split_record):
+            value = field.true_type(*[split_record[i] for i in field.field_position])
+            return field.field_name, get_stored_value(field, value)
+
+        def get_stored_value(field, value):
+            if field.store_as == 'Counter':
+                return Counter([value])
+            if field.store_as == 'set':
+                return {value}
+            elif field.store_as is None:
+                return value
+
+        def create_profile(record):
+            profile = dict([get_value_from_record(field, record) for field in fields] + [('c', 1)])
+            return record[profile_field_id], profile
+
+        def store_profile(user_profile):
+            user_id, profile = user_profile
+            return storage_delimiter.join([user_id, ujson.dumps(profile)])
+
+        return create_profile, store_profile
+
+    @property
+    def load_profile(self):
+        """
+        This functions returns functions (that can be serialized) for the spark job to create profiles
+        the functions do not reference self.
+        :returns:
+        """
+        storage_delimiter = self.storage_delimiter
+
+        def deserialize_profile(profile_str):
+            profile = ujson.loads(profile_str)
+            for k, v in profile.items():
+                if isinstance(v, dict):
+                    profile[k] = Counter(v)
+                elif isinstance(v, list):
+                    profile[k] = set(v)
+            return profile
+
+        def load_profile(record):
+            user_id, profile_str = record.strip().split(storage_delimiter)
+            return user_id, deserialize_profile(profile_str)
+
+        return load_profile
+
     def serialize(self):
         """
         Serializes the job so that we can store it
@@ -94,8 +157,7 @@ class RightPersonProfileMiner(object):
         :type date: datetime|date|None
         :rtype: str
         """
-        input_prefix = self.input_prefixes[date]
-        return get_spark_s3_files(self.config.s3_bucket, input_prefix)
+        return get_spark_s3_files(self.config.s3_bucket, self.input_prefixes[date])
 
     def profile_output_location(self, date):
         """
@@ -103,69 +165,7 @@ class RightPersonProfileMiner(object):
         :type date: datetime|date|None
         :rtype: str
         """
-        output_prefix = self.output_prefixes[date]
-        return get_spark_s3_files(self.output_s3_bucket, output_prefix)
-
-    def profile_building_functions(self):
-        """
-        This function returns functions (that can be serialized) for the spark job to create profiles
-        :returns: a function to create profiles and a function to store them
-        """
-
-        fields = self.config.fields
-
-        for field in fields:
-            field.true_type = eval(field.field_type)
-
-        profile_field_id = self.config.profile_id_field
-        storage_delimiter = self.storage_delimiter
-
-        def get_value_from_record(field, split_record):
-            value = field.true_type(*[split_record[i] for i in field.field_position])
-            return field.field_name, get_stored_value(field, value)
-
-        def get_stored_value(field, value):
-            if field.store_as == 'Counter':
-                return Counter([value])
-            if field.store_as == 'set':
-                return {value}
-            elif field.store_as is None:
-                return value
-
-        def create_profile(record):
-            profile = dict([get_value_from_record(field, record) for field in fields] + [('c', 1)])
-            return record[profile_field_id], profile
-
-        def store_profile(user_profile):
-            user_id, profile = user_profile
-            return storage_delimiter.join([user_id, ujson.dumps(profile)])
-
-        return create_profile, store_profile
-
-    def profile_loading_functions(self):
-        """
-        This functions returns functions (that can be serialized) for the spark job to create profiles
-        :returns:
-        """
-        storage_delimiter = self.storage_delimiter
-
-        def deserialize_profile(profile_str):
-
-            profile = ujson.loads(profile_str)
-
-            for k, v in profile.items():
-                if isinstance(v, dict):
-                    profile[k] = Counter(v)
-                elif isinstance(v, list):
-                    profile[k] = set(v)
-
-            return profile
-
-        def load_profile(record):
-            user_id, profile_str = record.strip().split(storage_delimiter)
-            return user_id, deserialize_profile(profile_str)
-
-        return load_profile
+        return get_spark_s3_files(self.output_s3_bucket, self.output_prefixes[date])
 
     def build_profiles(self, session, date):
         """
@@ -177,9 +177,19 @@ class RightPersonProfileMiner(object):
         record_location = self.profile_input_location(date)
         profile_save_location = self.profile_output_location(date)
 
-        create_profile, serialise_profile = self.profile_building_functions()
+        create_profile, serialise_profile = self.profile_building_functions
+        profile_delimiter = self.config.delimiter
 
-        session.read.csv(record_location, header=self.config.files_contain_headers, sep=self.config.delimiter).rdd.map(
+        raw_files = session.sparkContext.textFile(record_location)
+
+        if self.config.files_contain_headers:
+            headers = raw_files.take(1)
+            Record = namedtuple('Record', csv.reader(headers, delimiter=profile_delimiter).next())
+            raw_files = raw_files.filter(lambda line: line != headers[0])
+        else:
+            Record = (lambda *line: list(line))
+
+        raw_files.map(lambda line: Record(*csv.reader([line], delimiter=profile_delimiter).next())).map(
             create_profile).reduceByKey(combine_profiles).filter(global_filter_profile).map(
             serialise_profile).saveAsTextFile(
             profile_save_location, compressionCodecClass="org.apache.hadoop.io.compress.GzipCodec")
@@ -191,9 +201,8 @@ class RightPersonProfileMiner(object):
         :rtype: pyspark.rdd.RDD
         """
         profiles = ','.join([self.profile_output_location(date) for date in self.dates])
-        load_profile = self.profile_loading_functions()
 
-        return session.sparkContext.textFile(profiles).map(load_profile).reduceByKey(combine_profiles).filter(
+        return session.sparkContext.textFile(profiles).map(self.load_profile).reduceByKey(combine_profiles).filter(
             global_filter_profile)
 
     def profiles_exist_for_date(self, date):
