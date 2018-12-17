@@ -19,7 +19,8 @@ import csv
 import datetime
 import os
 import ujson
-from collections import Counter, namedtuple
+from collections import Counter
+from itertools import islice
 
 from right_person.data_mining.cluster.utils import get_spark_s3_files
 from right_person.data_mining.profiles.config import ProfileDocumentConfig
@@ -183,15 +184,10 @@ class RightPersonProfileMiner(object):
         raw_files = session.sparkContext.textFile(record_location)
 
         if self.config.files_contain_headers:
-            headers = raw_files.take(1)
-            Record = namedtuple('Record', csv.reader(headers, delimiter=profile_delimiter).next())
-            raw_files = raw_files.filter(lambda line: line != headers[0])
-        else:
-            Record = (lambda *line: list(line))
+            raw_files = raw_files.mapPartitionsWithIndex(lambda idx, it: islice(it, 1, None) if idx == 0 else it)
 
-        raw_files.map(lambda line: Record(*csv.reader([line], delimiter=profile_delimiter).next())).map(
-            create_profile).reduceByKey(combine_profiles).filter(global_filter_profile).map(
-            serialise_profile).saveAsTextFile(
+        raw_files.map(lambda line: create_profile(csv.reader([line], delimiter=profile_delimiter).next())).reduceByKey(
+            combine_profiles).filter(global_filter_profile).map(serialise_profile).saveAsTextFile(
             profile_save_location, compressionCodecClass="org.apache.hadoop.io.compress.GzipCodec")
 
     def profiles(self, session):

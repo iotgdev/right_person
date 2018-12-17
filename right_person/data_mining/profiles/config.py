@@ -38,7 +38,9 @@ class ProfileDocumentConfig(object):
 
     @staticmethod
     def clean_delimiter(delimiter):
-        if len(delimiter) != 1 or not isinstance(delimiter, basestring):
+        if isinstance(delimiter, unicode):
+            delimiter = str(delimiter)
+        if len(delimiter) != 1:
             raise ValueError('delimiter should be single character!')
         return delimiter
 
@@ -55,7 +57,7 @@ class ProfileDocumentConfig(object):
             raise ValueError('doc_type must be string!')
 
 
-class ProfileFieldConfig(object):  # todo: possibly remove this object?
+class ProfileFieldConfig(object):
     """A config object outlining relevant fields in a document used to build profiles"""
     __metaclass__ = AttributeCleaningMetaclass
 
