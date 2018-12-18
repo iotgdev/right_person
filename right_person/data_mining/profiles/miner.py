@@ -185,9 +185,12 @@ class RightPersonProfileMiner(object):
 
         if self.config.files_contain_headers:
             header = raw_files.first()
-            raw_files = raw_files.filter(lambda x: x != header)
+            map_fn = (lambda x: create_profile(
+                csv.reader([x], delimiter=profile_delimiter).next()) if x != header else (None, None))
+        else:
+            map_fn = (lambda x: create_profile(csv.reader([x], delimiter=profile_delimiter).next()))
 
-        raw_files.map(lambda line: create_profile(csv.reader([line], delimiter=profile_delimiter).next())).reduceByKey(
+        raw_files.map(map_fn).reduceByKey(
             combine_profiles).filter(global_filter_profile).map(serialise_profile).saveAsTextFile(
             profile_save_location, compressionCodecClass="org.apache.hadoop.io.compress.GzipCodec")
 
