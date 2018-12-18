@@ -20,7 +20,6 @@ import datetime
 import os
 import ujson
 from collections import Counter
-from itertools import islice
 
 from right_person.data_mining.cluster.utils import get_spark_s3_files
 from right_person.data_mining.profiles.config import ProfileDocumentConfig

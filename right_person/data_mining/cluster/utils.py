@@ -117,7 +117,7 @@ def get_spark_s3_files(s3_bucket, s3_prefix):
     :type s3_prefix: str
     :rtype: str
     """
-    return 's3a://{}'.format(os.path.join(s3_bucket, s3_prefix))
+    return 's3n://{}'.format(os.path.join(s3_bucket, s3_prefix))
 
 
 _SPARK_PACKAGE_MANAGER = SparkPackageManager()
