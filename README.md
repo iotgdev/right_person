@@ -37,7 +37,7 @@ An example of a miner config looks like this:
 ...     files_contain_headers=True,
 ...     s3_bucket = 'bucket',
 ...     s3_prefix = 'prefix_with_date_%Y-%m-%d',
-...     fields = [ProfileFieldConfig('field_name_in_profile', [0], 'str', 'Counter')]
+...     fields = [ProfileFieldConfig('field_name_in_profile', [0], 'str', 'counter')]
 ... )
 ```
 

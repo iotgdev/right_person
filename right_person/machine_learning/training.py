@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 
 import logging
 import random
-from collections import Counter
 from itertools import repeat
 from operator import itemgetter
 
@@ -167,7 +166,7 @@ def get_audience_filter_function(self):
 
         if isinstance(profile_value, bool):
             return normal_definition_value == profile_value
-        elif isinstance(profile_value, (Counter, dict, set)):
+        elif isinstance(profile_value, (dict, set)):
             return normal_definition_value in profile_value
         else:
             field_type = type(normal_definition_value)

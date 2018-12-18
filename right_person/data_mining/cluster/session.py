@@ -53,6 +53,7 @@ def _get_right_person_spark_config(master_ip):
 
         _config.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         # config.set("spark.executor.extraClassPath", )
+        _config.get("spark.rpc.message.maxSize", "256")
         _config.set("spark.hadoop.mapred.output.compress", "true")
         _config.set("spark.hadoop.mapred.output.compression.codec", "org.apache.hadoop.io.compress.GzipCodec")
         _config.set("spark.hadoop.mapred.output.compress.type", "BLOCK")

@@ -7,7 +7,6 @@ No direct usage is expected.
 """
 from __future__ import unicode_literals
 import mmh3
-from collections import Counter
 from scipy.sparse import coo_matrix
 
 
@@ -40,7 +39,7 @@ def flatten_profile_feature(feature, values):
     :rtype: list
     """
 
-    if isinstance(values, (set, Counter)):
+    if isinstance(values, (set, dict)):
         return ['{}-{}'.format(feature, val) for val in values]
     elif isinstance(values, (int, bool)) and values:
         return ['{}-{}'.format(feature, bool(values))]

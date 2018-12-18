@@ -8,7 +8,7 @@ methods are provided to interface with profiles using either a list of pyspark.R
 import random
 
 import pyspark
-from collections import defaultdict, Counter
+from collections import defaultdict
 
 
 MIN_RECORDS_FOR_PROFILE = 5
@@ -33,8 +33,14 @@ def combine_profiles(profile_1, profile_2):
             if isinstance(val, (bool, set)):  # bool must come first since bools are subtypes of ints
                 profile_1[feature] |= val
 
-            elif isinstance(val, (int, Counter)):
+            elif isinstance(val, int):
                 profile_1[feature] += val
+            elif isinstance(val, dict):
+                for i in val:
+                    if i in profile_1[feature]:
+                        profile_1[feature][i] += val[i]
+                    else:
+                        profile_1[feature][i] = val[i]
 
         else:
             profile_1[feature] = val

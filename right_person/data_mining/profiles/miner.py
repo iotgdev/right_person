@@ -19,20 +19,17 @@ import csv
 import datetime
 import os
 import ujson
-from collections import Counter
 
 from right_person.data_mining.cluster.utils import get_spark_s3_files
 from right_person.data_mining.profiles.config import ProfileDocumentConfig
 from right_person.data_mining.profiles.transformations import combine_profiles, global_filter_profile
 from right_person.utilities.connections import get_s3_connection
 
-PROFILE_DAYS = 7
-
 
 class RightPersonProfileMiner(object):
     """A RightPerson data miner that builds profiles from openrtb data using spark"""
 
-    def __init__(self, config, output_s3_bucket, data_max_age=PROFILE_DAYS):
+    def __init__(self, config, output_s3_bucket, data_max_age=7):
         """
         create a right_person profile creating job
         :type config: right_person.config.profile_mining_job.ProfileDocumentConfig
@@ -81,19 +78,22 @@ class RightPersonProfileMiner(object):
         storage_delimiter = self.storage_delimiter
 
         def get_value_from_record(field, split_record):
-            value = field.true_type(*[split_record[i] for i in field.field_position])
-            return field.field_name, get_stored_value(field, value)
+            value = field.true_type(*(split_record[i] for i in field.field_position))
+            return get_stored_value(field.store_as, value)
 
-        def get_stored_value(field, value):
-            if field.store_as == 'Counter':
-                return Counter([value])
-            if field.store_as == 'set':
+        def get_stored_value(store_as, value):
+            if store_as == 'counter':
+                return {value: 1}
+            if store_as == 'set':
                 return {value}
-            elif field.store_as is None:
+            elif store_as is None:
                 return value
 
         def create_profile(record):
-            profile = dict([get_value_from_record(field, record) for field in fields] + [('c', 1)])
+            profile = {}
+            for field in fields:
+                profile[field.field_name] = get_value_from_record(field, record)
+            profile['c'] = 1
             return record[profile_field_id], profile
 
         def store_profile(user_profile):
@@ -114,9 +114,7 @@ class RightPersonProfileMiner(object):
         def deserialize_profile(profile_str):
             profile = ujson.loads(profile_str)
             for k, v in profile.items():
-                if isinstance(v, dict):
-                    profile[k] = Counter(v)
-                elif isinstance(v, list):
+                if isinstance(v, list):
                     profile[k] = set(v)
             return profile
 
@@ -189,8 +187,9 @@ class RightPersonProfileMiner(object):
         else:
             map_fn = (lambda x: create_profile(csv.reader([x], delimiter=profile_delimiter).next()))
 
-        raw_files.map(map_fn).coalesce(session.sparkContext.defaultParallelism * 4).reduceByKey(
-            combine_profiles).filter(global_filter_profile).map(serialise_profile).saveAsTextFile(
+        partial_profiles = raw_files.map(map_fn).filter(lambda x: x != (None, None))
+        profiles = partial_profiles.reduceByKey(combine_profiles).filter(global_filter_profile)
+        profiles.map(serialise_profile).saveAsTextFile(
             profile_save_location, compressionCodecClass="org.apache.hadoop.io.compress.GzipCodec")
 
     def profiles(self, session):

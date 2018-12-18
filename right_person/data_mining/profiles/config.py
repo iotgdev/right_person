@@ -66,7 +66,7 @@ class ProfileFieldConfig(object):
         :param str field_name: the full name of the field to add to the profile
         :param list[int] field_position: the field indexes to derive the field from
         :param str field_type: the string representation of a python executable to create the field value.
-        :param str|None store_as: the type of storage in the profile (currently supported are "Counter", "set", None)
+        :param str|None store_as: the type of storage in the profile (currently supported are "counter", "set", None)
         """
         self.field_name = field_name
         self.field_position = field_position
@@ -97,7 +97,7 @@ class ProfileFieldConfig(object):
 
     @staticmethod
     def clean_store_as(stored_as):
-        valid_values = {'Counter', 'set', None}
+        valid_values = {'counter', 'set', None}
         if stored_as not in valid_values:
             raise ValueError('invalid value for stored_as! should be in {}'.format(tuple(valid_values)))
         return stored_as
