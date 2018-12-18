@@ -23,7 +23,7 @@ def combine_profiles(profile_1, profile_2):
     :rtype: dict
     """
 
-    if not all((profile_1, profile_2)) or profile_1['c'] + profile_2['c'] > MAX_RECORDS_FOR_PROFILE:
+    if (not profile_1) or (not profile_2) or profile_1['c'] + profile_2['c'] > MAX_RECORDS_FOR_PROFILE:
         return
 
     for feature, val in profile_2.items():
