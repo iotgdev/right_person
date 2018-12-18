@@ -26,22 +26,20 @@ def combine_profiles(profile_1, profile_2):
     if not all((profile_1, profile_2)) or profile_1['c'] + profile_2['c'] > MAX_RECORDS_FOR_PROFILE:
         return
 
-    combined_profile = {}
-    profile_features = set(profile_1.keys() + profile_2.keys())
+    for feature, val in profile_2.items():
 
-    for feature in profile_features:
-        val = profile_1.get(feature, profile_2[feature])
+        if feature in profile_1:
 
-        if isinstance(val, bool):  # bool must come first since bools are subtypes of ints
-            combined_profile[feature] = profile_1[feature] or profile_2[feature]
+            if isinstance(val, (bool, set)):  # bool must come first since bools are subtypes of ints
+                profile_1[feature] |= val
 
-        elif isinstance(val, (int, Counter)):
-            combined_profile[feature] = profile_1[feature] + profile_2[feature]
+            elif isinstance(val, (int, Counter)):
+                profile_1[feature] += val
 
-        elif isinstance(val, set):
-            combined_profile[feature] = profile_1[feature] | profile_2[feature]
+        else:
+            profile_1[feature] = val
 
-    return combined_profile
+    return profile_1
 
 
 def global_filter_profile(profile):
