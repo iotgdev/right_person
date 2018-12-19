@@ -52,6 +52,7 @@ def _get_right_person_spark_config(master_ip):
         _config.set('spark.driver.maxResultSize', '1536m')
         # _config.set('spark.driver.memory', '1536m')
         _config.set('spark.memory.fraction', str(max(0.6, round(1 - 6. / int(slave_memory), 2))))
+        _config.set('spark.memory.storageFraction', '0.25')
         _config.set('spark.executor.memory', str(slave_memory) + "g")
 
         _config.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
