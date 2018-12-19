@@ -37,6 +37,8 @@ def _get_right_person_spark_config(master_ip):
     """
     global _config
     if not _config:
+        slave_memory = get_terraform_vars()['slave_max_memory_gb']
+
         _config = SparkConf().setAppName('right_person')
         _config.setMaster('spark://{}:7077'.format(master_ip))
         _config.set('spark.local.dir', '/mnt/spark/')
@@ -49,7 +51,8 @@ def _get_right_person_spark_config(master_ip):
         _config.set('spark.rdd.compress', 'True')
         _config.set('spark.driver.maxResultSize', '1536m')
         # _config.set('spark.driver.memory', '1536m')
-        _config.set('spark.executor.memory', get_terraform_vars()['slave_max_memory_gb'] + "g")
+        _config.set('spark.memory.fraction', str(max(0.6, round(1 - 6. / int(slave_memory), 2))))
+        _config.set('spark.executor.memory', str(slave_memory) + "g")
 
         _config.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         # config.set("spark.executor.extraClassPath", )
