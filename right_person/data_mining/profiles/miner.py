@@ -188,7 +188,7 @@ class RightPersonProfileMiner(object):
             map_fn = (lambda x: create_profile(csv.reader([x], delimiter=profile_delimiter).next()))
 
         partial_profiles = raw_files.map(map_fn).filter(lambda x: x != (None, None))
-        profiles = partial_profiles.reduceByKey(combine_profiles).filter(global_filter_profile)
+        profiles = partial_profiles.reduceByKey(combine_profiles, partitionFunc=hash).filter(global_filter_profile)
         profiles.map(serialise_profile).saveAsTextFile(
             profile_save_location, compressionCodecClass="org.apache.hadoop.io.compress.GzipCodec")
 
