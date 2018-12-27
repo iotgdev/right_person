@@ -21,8 +21,7 @@ import tempfile
 import ujson
 
 from right_person.data_mining.cluster.utils import get_current_ipv4, run_system_shell_process, get_terraform_vars, \
-    TERRAFORM_DIRECTORY, TERRAFORM_VARS
-
+    TERRAFORM_DIRECTORY, TERRAFORM_VARS, format_terraform_kwargs
 
 logger = logging.getLogger('right_person.data_mining.cluster.manager')
 
@@ -47,6 +46,7 @@ terraform plan
 -var-file={terraform_tfvars_json_file}
 -var 'ip_whitelist={extended_ip_whitelist}'
 -var 'cluster_id={cluster_id}'
+{kwargs}
 {terraform_state_location}
 """
 
@@ -84,7 +84,7 @@ class TerraformManager(dict):
                 ))
 
 
-def create_right_person_cluster(cluster_id):
+def create_right_person_cluster(cluster_id, **kwargs):
     """
     Creates a right person cluster as specified by the config
     :type cluster_id: str
@@ -118,6 +118,7 @@ def create_right_person_cluster(cluster_id):
             terraform_tfvars_json_file=TERRAFORM_VARS,
             extended_ip_whitelist=ujson.dumps(ip_whitelist),
             cluster_id=cluster_id,
+            kwargs=format_terraform_kwargs(kwargs),
             terraform_state_location=os.path.join(terraform_state_location, '')
         ).replace('\n', ' ').strip()))
 

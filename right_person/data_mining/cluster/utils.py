@@ -98,6 +98,10 @@ def get_terraform_vars():
     return ujson.load(open(TERRAFORM_VARS))
 
 
+def format_terraform_kwargs(kwargs):
+    return '\n'.join("-var '{}={}'".format(k, v) for k, v in kwargs.items())
+
+
 def add_package_to_spark(session, package_name):  # todo: refocus around the class rather than the function
     """
     adds a python package to the spark context by package import

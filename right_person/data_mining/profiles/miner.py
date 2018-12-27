@@ -19,6 +19,7 @@ import csv
 import datetime
 import os
 import ujson
+from operator import itemgetter
 
 from right_person.data_mining.cluster.utils import get_spark_s3_files
 from right_person.data_mining.profiles.config import ProfileDocumentConfig
@@ -46,39 +47,40 @@ class RightPersonProfileMiner(object):
         self.storage_delimiter = '\t'
 
     @property
-    def dates(self):
+    def _dates(self):
         """Get the dates of the job. Not available until the run_date is set"""
         return sorted(self.run_date - datetime.timedelta(days=i) for i in range(1, self.data_max_age + 1))
 
     @property
-    def input_prefixes(self):
+    def _input_prefixes(self):
         """Get the input locations of the job. Not available until the run_date is set"""
-        return {date: date.strftime(os.path.join(self.config.s3_prefix)) for date in self.dates}
+        return {date: date.strftime(os.path.join(self.config.s3_prefix)) for date in self._dates}
 
     @property
-    def output_prefixes(self):
+    def _output_prefixes(self):
         """Get the output locations of the job. Not available until the run_date is set"""
-        date_prefix = os.path.join('right_person', 'profiles', self.config.doc_name, '%Y/%m/%d/')
-        return {date: date.strftime(date_prefix) for date in self.dates}
+        date_prefix = os.path.join('right_person', self.config.doc_name, 'profiles', '%Y-%m-%d/')
+        return {date: date.strftime(date_prefix) for date in self._dates}
 
     @property
-    def profile_building_functions(self):
+    def create_profile(self):  # todo: confirm this is necessary
         """
-        This function returns functions (that can be serialized) for the spark job to create profiles
+        This function returns a function (that can be serialized) for the spark job to create profiles
         they do not contain references to self, and so can be easily serialised by spark.
-        :returns: a function to create profiles and a function to store them
+        :returns:
         """
 
         fields = self.config.fields
 
         for f in fields:
-            f.true_type = eval(f.field_type)
+            true_type = eval(f.field_type)
+            f.true_val = true_type if len(f.field_position) == 1 else (lambda x: true_type(*x))
+            f.getter = itemgetter(*f.field_position)
 
         profile_field_id = self.config.profile_id_field
-        storage_delimiter = self.storage_delimiter
 
         def get_value_from_record(field, split_record):
-            value = field.true_type(*(split_record[i] for i in field.field_position))
+            value = field.true_val(field.getter(split_record))
             return get_stored_value(field.store_as, value)
 
         def get_stored_value(store_as, value):
@@ -96,16 +98,27 @@ class RightPersonProfileMiner(object):
             profile['c'] = 1
             return record[profile_field_id], profile
 
+        return create_profile
+
+    @property
+    def store_profile(self):  # todo: confirm this is necessary
+        """
+        This function returns a function (that can be serialized) for the spark job to create profiles_by_day
+        the functions do not reference self.
+        :return:
+        """
+        storage_delimiter = self.storage_delimiter
+
         def store_profile(user_profile):
             user_id, profile = user_profile
             return storage_delimiter.join([user_id, ujson.dumps(profile)])
 
-        return create_profile, store_profile
+        return store_profile
 
     @property
-    def load_profile(self):
+    def load_profile(self):  # todo: confirm this is necessary
         """
-        This functions returns functions (that can be serialized) for the spark job to create profiles
+        This function returns a function (that can be serialized) for the spark job to create profiles_by_day
         the functions do not reference self.
         :returns:
         """
@@ -155,7 +168,7 @@ class RightPersonProfileMiner(object):
         :type date: datetime|date|None
         :rtype: str
         """
-        return get_spark_s3_files(self.config.s3_bucket, self.input_prefixes[date])
+        return get_spark_s3_files(self.config.s3_bucket, self._input_prefixes[date])
 
     def profile_output_location(self, date):
         """
@@ -163,7 +176,7 @@ class RightPersonProfileMiner(object):
         :type date: datetime|date|None
         :rtype: str
         """
-        return get_spark_s3_files(self.output_s3_bucket, self.output_prefixes[date])
+        return get_spark_s3_files(self.output_s3_bucket, self._output_prefixes[date])
 
     def build_profiles(self, session, date):
         """
@@ -175,42 +188,42 @@ class RightPersonProfileMiner(object):
         record_location = self.profile_input_location(date)
         profile_save_location = self.profile_output_location(date)
 
-        create_profile, serialise_profile = self.profile_building_functions
         profile_delimiter = str(self.config.delimiter)
 
         raw_files = session.sparkContext.textFile(record_location)
 
         if self.config.files_contain_headers:
             header = raw_files.first()
-            map_fn = (lambda x: create_profile(
+            map_fn = (lambda x: self.create_profile(
                 csv.reader([x], delimiter=profile_delimiter).next()) if x != header else (None, None))
         else:
-            map_fn = (lambda x: create_profile(csv.reader([x], delimiter=profile_delimiter).next()))
+            map_fn = (lambda x: self.create_profile(csv.reader([x], delimiter=profile_delimiter).next()))
 
         partial_profiles = raw_files.map(map_fn).filter(lambda x: x != (None, None))
         profiles = partial_profiles.reduceByKey(combine_profiles, partitionFunc=hash).filter(global_filter_profile)
-        profiles.map(serialise_profile).saveAsTextFile(
+        profiles.map(self.store_profile).saveAsTextFile(
             profile_save_location, compressionCodecClass="org.apache.hadoop.io.compress.GzipCodec")
 
-    def profiles(self, session):
+    def profiles_by_day(self, session):
         """
         Get the profiles as defined by the job. Only works when the job is complete (self.run_date is set)
         :type session: pyspark.SparkSession
         :rtype: pyspark.rdd.RDD
         """
-        profiles = ','.join([self.profile_output_location(date) for date in self.dates])
+        profiles = ','.join([self.profile_output_location(date) for date in self._dates])
 
-        return session.sparkContext.textFile(profiles).map(self.load_profile).reduceByKey(combine_profiles).filter(
-            global_filter_profile)
+        return session.sparkContext.textFile(profiles).map(self.load_profile)
 
-    def profiles_exist_for_date(self, date):
+    def profiles_exist_for_day(self, date):
+        """Checks if profiles exist for a given date"""
 
-        prefix = self.output_prefixes[date]
+        prefix = self._output_prefixes[date]
         return bool(list(get_s3_connection().Bucket(self.output_s3_bucket).objects.filter(Prefix=prefix)))
 
     def run(self, session):
+        """runs the mining job to produce profiles"""
 
         self.run_date = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
-        for date in self.dates:
-            if not self.profiles_exist_for_date(date):
+        for date in self._dates:
+            if not self.profiles_exist_for_day(date):
                 self.build_profiles(session, date)

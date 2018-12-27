@@ -15,7 +15,7 @@ MIN_RECORDS_FOR_PROFILE = 5
 MAX_RECORDS_FOR_PROFILE = 10000
 
 
-def combine_profiles(profile_1, profile_2):
+def combine_profiles(profile_1, profile_2):  # todo: move to the miner?
     """
     aggregate two right_person profiles combining the keys by type
     :type profile_1: dict

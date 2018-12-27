@@ -16,14 +16,27 @@ Accessing a cluster is easy with right person:
 ...     # do work using the session
 ```
 
-In the event that the cluster needs modifiation, the code for the cluster is here: `right_person/data_mining/cluster/`
+Clusters can be modified in two ways, by updating a default values configuration: 
+```commandline
+$ right_person_cluster_manager -e
+``` 
+or by passing keywords into the context manager:
+```python
+>>> from right_person.data_mining.cluster.context_managers import right_person_cluster_session
+>>> with right_person_cluster_session('cluster_id', slave_count=4) as session:
+...     # do work
+```
+The cluster is built using terraform. In the event that the cluster needs more comprehensive modifiation, the code for the cluster is here: `right_person/data_mining/cluster/`
 
 
 Miners are incredibly simple to use:
 ```python
+>>> from right_person.data_mining.cluster.context_managers import right_person_cluster_session
 >>> from right_person.data_mining.profiles.miner import RightPersonProfileMiner
->>> miner = RightPersonProfileMiner({}, '')
->>> miner.run()
+>>>
+>>> with right_person_cluster_session('cluster_id', slave_count=4) as session:
+>>>     miner = RightPersonProfileMiner({}, '')
+>>>     miner.run(session)
 ```
 
 Data miners have a config to specify the format of the data in the profiles.
@@ -41,8 +54,6 @@ An example of a miner config looks like this:
 ... )
 ```
 
-More information is available at the source.
-
 ### Models
 The right profile models are Logistic regression models. 
 The models are serializable and are stored on s3 by default.
@@ -55,7 +66,7 @@ Interfacing with the models is easy:
 ```
 
 Models carry a config, which can be used to train the model. 
-A list of whitelisted features defines which data the model will process from some large unknown profile
+A list of whitelisted features defines which data the model will process from some large unknown profile.
 A good definition supplies instructions to define whether or not a user belongs in the `model.good_users` set.
 An audience defines the profiles that should be used as the control group in training.
 Config classes for the model are json serialisable and can be found at `right_person.machine_learning.models.config`:

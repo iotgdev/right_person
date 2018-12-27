@@ -25,16 +25,17 @@ logger = logging.getLogger('right_person.data_mining.cluster.context_managers')
 
 
 @contextmanager
-def right_person_cluster_session(job_id):
+def right_person_cluster_session(job_id, **kwargs):
     """
     context manager for a spark session and cluster.
     builds a spark cluster, provides a spark session
     and then destroys the cluster
     :type job_id: str
+    :type kwargs: dict
     :rtype: pyspark.SparkSession
     """
     try:
-        master_node_ip = create_right_person_cluster(job_id)
+        master_node_ip = create_right_person_cluster(job_id, **kwargs)
         spark_session = get_new_right_person_spark_session(master_ip=master_node_ip)
         add_package_to_spark(spark_session, 'right_person')
         yield spark_session
