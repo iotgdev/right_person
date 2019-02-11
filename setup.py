@@ -51,7 +51,7 @@ setup(
         'boto3',
         'mmh3',
         'numpy',
-        'pyspark==2.3.1',
+        'pyspark==2.3.2',
         'requests',
         'scipy==1.1.0',
         'scikit-learn',

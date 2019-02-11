@@ -30,7 +30,15 @@
       - numpy
       - sklearn
       - mmh3
-      - right_person
+      - boto3
+      - mmh3
+      - numpy,
+      - pyspark==2.3.2
+      - requests
+      - scipy==1.1.0
+      - scikit-learn
+      - ujson
+      - ulid
   become: yes
 
 
@@ -53,7 +61,7 @@
 
   - name: Unarchive Spark
     unarchive:
-      src: http://www.mirrorservice.org/sites/ftp.apache.org/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz
+      src: http://www.mirrorservice.org/sites/ftp.apache.org/spark/spark-2.3.2/spark-2.3.2-bin-hadoop2.7.tgz
       dest: /home/ubuntu/spark/
       remote_src: yes
       extra_opts: [--strip-components=1]

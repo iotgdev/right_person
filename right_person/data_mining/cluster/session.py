@@ -41,7 +41,6 @@ def _get_right_person_spark_config(master_ip):
 
         _config = SparkConf().setAppName('right_person')
         _config.setMaster('spark://{}:7077'.format(master_ip))
-        _config.set('spark.local.dir', '/mnt/spark/')
         _config.set('spark.jars.packages', 'org.apache.hadoop:hadoop-aws:2.7.5,com.amazonaws:aws-java-sdk:1.7.4')
         _config.get("spark.rpc.message.maxSize", "256")
         _config.set('spark.rdd.compress', 'True')

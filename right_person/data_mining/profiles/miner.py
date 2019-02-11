@@ -17,7 +17,9 @@ from __future__ import unicode_literals
 
 import csv
 import datetime
+import mmh3
 import os
+import sys
 import ujson
 from operator import itemgetter
 
@@ -73,8 +75,8 @@ class RightPersonProfileMiner(object):
         fields = self.config.fields
 
         for f in fields:
-            true_type = eval(f.field_type)
-            f.true_val = true_type if len(f.field_position) == 1 else (lambda x: true_type(*x))
+
+            f.true_val = eval(f.field_type)
             f.getter = itemgetter(*f.field_position)
 
         profile_field_id = self.config.profile_id_field

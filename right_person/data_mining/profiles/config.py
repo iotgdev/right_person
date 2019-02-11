@@ -83,9 +83,8 @@ class ProfileFieldConfig(object):
     @staticmethod
     def clean_field_type(field_type):
         try:
-            if callable(eval(field_type)):
-                return field_type
-            raise
+            assert callable(eval(field_type))
+            return field_type
         except:
             raise ValueError('invalid field_type: {}.'.format(field_type))
 

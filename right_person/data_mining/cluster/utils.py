@@ -108,7 +108,7 @@ def add_package_to_spark(session, package_name):  # todo: refocus around the cla
     :type session: pyspark.SparkSession
     :param package_name: a python imported package name
     """
-    package_location = os.path.abspath(os.path.dirname(sys.modules[package_name].__file__))
+    package_location = os.path.abspath(os.path.join(os.pardir, os.path.dirname(sys.modules[package_name].__file__)))
     package_tar = shutil.make_archive(package_name, 'zip', package_location)
     _SPARK_PACKAGE_MANAGER[package_name] = package_tar
     session.sparkContext.addPyFile(package_tar)
