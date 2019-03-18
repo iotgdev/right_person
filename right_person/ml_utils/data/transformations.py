@@ -119,10 +119,11 @@ def collect_profiles(profiles):
 def count_profiles(profiles):
     """
     count the number of profiles
-    :type profiles: pyspark.RDD
+    :type profiles: pyspark.RDD|list
     :rtype: list
     """
     if isinstance(profiles, pyspark.RDD):
+        # noinspection PyArgumentList
         return profiles.count()
     else:
         return len(profiles)

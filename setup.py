@@ -40,7 +40,7 @@ setup(
     ],
 
     # Package Properties
-    packages=find_packages(include=['right_person', 'right_person.*']),
+    packages=find_packages(include=['right_person', 'right_person.*', 'spark_data_miner', 'spark_data_miner.*']),
     include_package_data=True,
     test_suite='test',
     setup_requires=['pytest-runner'],

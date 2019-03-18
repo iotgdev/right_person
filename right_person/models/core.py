@@ -20,11 +20,9 @@ from scipy.sparse import coo_matrix
 from sklearn.linear_model import LogisticRegression
 
 
-MAX_TRAINING_SET_SIZE = 100000
-
-
 class RightPersonModel(object):
     """Model for evaluating users based on auction history."""
+    MAX_TRAINING_SET_SIZE = 100000
 
     def __init__(self, name, account, model_id=None, good_users=None, audience_size=0, audience_good_size=0,
                  weights=None, hash_size=1000000, l2reg=1, features=None, created_at=None, updated_at=None):
@@ -68,7 +66,7 @@ class RightPersonModel(object):
         if not self.audience_size:
             return 1.0
         max_good_ratio = 10.0
-        normal_ratio = float(MAX_TRAINING_SET_SIZE - self.audience_good_size) / self.audience_size
+        normal_ratio = float(self.MAX_TRAINING_SET_SIZE - self.audience_good_size) / self.audience_size
         good_ratio = float(self.audience_good_size * max_good_ratio) / self.audience_size
         return min(1.0, normal_ratio, good_ratio)
 

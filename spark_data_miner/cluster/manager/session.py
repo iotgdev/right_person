@@ -3,9 +3,9 @@
 """
 Creates a session to interface with a spark cluster as an independent driver.
 Usage:
->>> API_SESSION = get_new_right_person_spark_session('127.0.0.1')
+>>> session = get_new_right_person_spark_session('127.0.0.1')
 >>> # do session things...
->>> API_SESSION.stop()
+>>> session.stop()
 """
 from __future__ import unicode_literals
 
