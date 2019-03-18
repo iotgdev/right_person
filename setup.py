@@ -46,7 +46,11 @@ setup(
     setup_requires=['pytest-runner'],
     tests_require=['mock>=2.0.0', 'pytest'],
     cmdclass={'pytest': about.get('PyTest')},
-    scripts=['bin/right_person_cluster_manager'],
+    entry_points={
+        'console_scripts': [
+            'build_right_person_ami=spark_data_miner.cluster.ami.utils:create_ami_from_instance'
+        ]
+    },
     install_requires=[
         'boto3',
         'mmh3',
