@@ -1,7 +1,0 @@
----
-- hosts: "spark_node:packer"
-  remote_user: ubuntu
-  gather_facts: yes
-
-  roles:
-    - right_person_node
