@@ -3,6 +3,7 @@
 """connection functions for right_person"""
 from __future__ import unicode_literals
 
+import os
 
 import boto3
 

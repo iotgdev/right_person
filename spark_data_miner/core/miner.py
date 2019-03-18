@@ -24,8 +24,7 @@ import os
 import ujson
 from operator import itemgetter
 
-from right_person.utilities.connections import get_s3_connection
-from spark_data_miner.core.utils import get_spark_s3_files
+from spark_data_miner.core.utils import get_spark_s3_files, get_s3_connection
 
 
 class SparkDatasetMiner(object):

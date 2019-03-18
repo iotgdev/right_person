@@ -4,7 +4,8 @@
 Models for right_person
 
 Usage:
->>> model = RightPersonModel('test')
+>>> from right_person.models.core import RightPersonModel
+>>> model = RightPersonModel('name', 'account')
 >>> model.partial_fit([{'test': 1}], [1])
 >>> model.predict({'test': 1})
 1
