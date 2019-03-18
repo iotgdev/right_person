@@ -40,7 +40,7 @@ def create_ami_instance(region, subnet_id, profile_arn, image_id, instance_type=
     instance_name = datetime.datetime.now().strftime('spark-data-miner-ami-builder-%s')
     tag_specs = [{'ResourceType': 'instance', 'Tags': [{'Key': 'Name', 'Value': instance_name}]}]
     return ec2_client(region).run_instances(
-        ImageId=image_id, SubnetId=subnet_id, InstanceType=instance_type, MaxCount=1, MinCount=1, KeyName='labs',
+        ImageId=image_id, SubnetId=subnet_id, InstanceType=instance_type, MaxCount=1, MinCount=1,
         IamInstanceProfile={'Arn': profile_arn}, TagSpecifications=tag_specs
     )['Instances'][0]
 
