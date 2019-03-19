@@ -12,15 +12,17 @@ Usage:
 >>> from spark_data_miner.core.config import MinerField, MinerConfig
 >>> config = MinerConfig(...)
 >>> cluster_plan = ClusterPlan(...)
->>> miner = SparkDatasetMiner('right_person_profile_miner', config, 'output-bucket')
+>>> miner = SparkDatasetMiner(config, 'output-bucket', 1)
 >>> with spark_data_mining_session(cluster_plan) as session:
 ...:    miner.create_dataset(session)
 """
 from __future__ import unicode_literals
 
+import base64
 import csv
 import datetime
 import os
+import posixpath
 import ujson
 from operator import itemgetter
 
@@ -32,8 +34,7 @@ class SparkDatasetMiner(object):
     MAX_COMBINED_RECORDS = 10000
     MIN_COMBINED_RECORDS = 5
 
-    def __init__(self, name, config, output_s3_bucket, data_max_age=7):
-        self.name = name
+    def __init__(self, config, output_s3_bucket, data_max_age=7):
         self.run_date = None
 
         self.config = config
@@ -44,7 +45,7 @@ class SparkDatasetMiner(object):
     @property
     def _dates(self):
         """Get the dates of the job. Not available until the run_date is set"""
-        return sorted(self.run_date - datetime.timedelta(days=i) for i in range(1, self.data_max_age + 1))
+        return sorted(self.run_date - datetime.timedelta(days=i+1) for i in range(self.data_max_age))
 
     @property
     def _input_prefixes(self):
@@ -54,7 +55,9 @@ class SparkDatasetMiner(object):
     @property
     def _output_prefixes(self):
         """Get the output locations of the job. Not available until the run_date is set"""
-        date_prefix = os.path.join('spark_data_miner', self.config.doc_name, '%Y-%m-%d/')
+        bucket = base64.b64encode(self.config.s3_bucket.encode()).decode("utf-8")
+        prefix = base64.b64encode(self.config.s3_prefix.encode()).decode("utf-8")
+        date_prefix = posixpath.join('spark_data_miner', self.config.name, bucket, prefix, '%Y-%m-%d/')
         return {date: date.strftime(date_prefix) for date in self._dates + [self.run_date]}
 
     @property
@@ -216,10 +219,11 @@ class SparkDatasetMiner(object):
     def get_dataset_for_day(self, session):
         """
         :type session: pyspark.SparkSession
-        :rtype: pyspark.rdd.RDD
         """
-        datasets = ','.join([self.get_dataset_output_location(date) for date in self._dates])
-        return session.sparkContext.textFile(datasets).map(self.load_record)
+        for date in self._dates:
+            rdd = session.sparkContext.textFile(self.get_dataset_output_location(date)).map(self.load_record).cache()
+            yield rdd
+            rdd.unpersist()
 
     def dataset_exists(self, date):
         prefix = self._output_prefixes[date]
