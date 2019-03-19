@@ -212,7 +212,7 @@ class SparkDatasetMiner(object):
             map_fn = (lambda x: self.create_record(csv.reader([x], delimiter=delimiter).next()))
 
         partial_dataset = raw_files.map(map_fn).filter(lambda x: x != (None, None))
-        dataset = partial_dataset.reduceByKey(self.combine_records, partitionFunc=hash).filter(self.filter_records)
+        dataset = partial_dataset.reduceByKey(self.combine_records, 1000).filter(self.filter_records)
         dataset.map(self.store_record).saveAsTextFile(
             dataset_output_location, compressionCodecClass="org.apache.hadoop.io.compress.GzipCodec")
 
