@@ -7,11 +7,11 @@ about = {
 }
 
 with open(os.path.join(about['here'], 'version.py')) as f:
-    exec (f.read(), about)
+    exec(f.read(), about)
 
 try:
     with open(os.path.join(about['here'], 'test', '__init__.py')) as f:
-        exec (f.read(), about)
+        exec(f.read(), about)
 except IOError:
     pass
 
@@ -52,6 +52,7 @@ setup(
         ]
     },
     install_requires=[
+        'builtins',
         'boto3',
         'mmh3',
         'numpy',

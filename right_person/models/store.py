@@ -4,6 +4,7 @@
 classes for storing right person models
 """
 from __future__ import unicode_literals
+from builtins import bytes
 
 import struct
 import ujson
@@ -59,8 +60,12 @@ class RightPersonStore(object):
         hash_size = model_fields['hashSize']
         for i in self.byte_fields:
             model_fields[i] = struct.pack('<%sf' % hash_size, *model_fields[i].ravel())
+            if isinstance(model_fields[i], str):  # python 2 to 3
+                model_fields[i] = bytes(model_fields[i])
         for i in self.json_fields:
             model_fields[i] = ujson.dumps(model_fields[i]).encode()
+            if isinstance(model_fields[i], str):  # python 2 to 3
+                model_fields[i] = bytes(model_fields[i])
         return model_fields
 
     def __init__(self):
