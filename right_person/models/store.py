@@ -92,7 +92,7 @@ class RightPersonStore(object):
                 model_id, resource = value.split('/')[-2:]
                 resp_resource = self.api.resources.retrieve(model_id, resource, **params)
                 if key in self.byte_fields:
-                    resp[key] = numpy.fromstring(resp_resource, dtype='<f4')
+                    resp[key] = numpy.frombuffer(resp_resource, dtype='<f4')
                 elif key in self.json_fields:
                     resp[key] = ujson.loads(resp_resource.decode())
         return self._to_model(resp)
