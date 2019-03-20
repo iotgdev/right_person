@@ -43,7 +43,6 @@ def _get_right_person_spark_config(master_ip):
 
         _config.set('spark.blockManager.port', str(BLOCK_MANAGER_PORT))
         _config.set('spark.driver.port', str(TASK_SCHEDULER_PORT))
-        _config.set('spark.submit.deployMode', 'cluster')  # todo: see if this improves performance
 
         _config.set('spark.driver.maxResultSize', '1536m')
 

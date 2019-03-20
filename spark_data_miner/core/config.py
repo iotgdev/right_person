@@ -1,4 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from collections import namedtuple
+
+import six
 
 _miner_config = namedtuple('_miner_config', 'name delimiter fields id_field headers s3_bucket s3_prefix')
 _miner_field = namedtuple('_miner_field', 'name index rtype stype')
@@ -7,14 +11,15 @@ _miner_field = namedtuple('_miner_field', 'name index rtype stype')
 class MinerField(_miner_field):
 
     __NAME_ERROR_MESSAGE = 'name must be string'
-    __INDEX_ERROR_MESSAGE = 'index must be of type int or list[int]'
+    __INDEX_ERROR_MESSAGE = 'index must be of type int or tuple[int]'
     __RTYPE_ERROR_MESSAGE = 'rtype must be callable'
     __STYPE_ERROR_MESSAGE = 'stype must be "dict", "set" or None'
 
     def __new__(cls, name, index, rtype, stype=None):
-        assert isinstance(name, str), cls.__NAME_ERROR_MESSAGE
-        assert type(index) in (int, list), cls.__INDEX_ERROR_MESSAGE
-        if isinstance(index, list):
+        assert isinstance(name, six.string_types), cls.__NAME_ERROR_MESSAGE
+        assert type(index) in (int, list, tuple), cls.__INDEX_ERROR_MESSAGE
+        if isinstance(index, (list, tuple)):
+            index = tuple(index)
             assert all(isinstance(arg, int) for arg in index), cls.__INDEX_ERROR_MESSAGE
         else:
             index = [index]
@@ -39,15 +44,15 @@ class MinerConfig(_miner_config):
     __S3_PREFIX_ERROR_MESSAGE = 's3 prefix must be string'
 
     def __new__(cls, name, delimiter, fields, id_field, headers, s3_bucket, s3_prefix):
-        assert isinstance(name, str), cls.__NAME_ERROR_MESSAGE
-        assert isinstance(delimiter, str) and len(str(delimiter)) == 1, cls.__DELIMITER_ERROR_MESSAGE
+        assert isinstance(name, six.string_types), cls.__NAME_ERROR_MESSAGE
+        assert isinstance(delimiter, six.string_types) and len(str(delimiter)) == 1, cls.__DELIMITER_ERROR_MESSAGE
         try:
             fields = [f if isinstance(f, MinerField) else MinerField(**f) for f in fields]
         except Exception:
             raise TypeError(cls.__FIELDS_ERROR_MESSAGE)
         assert isinstance(id_field, int), cls.__ID_FIELD_ERROR_MESSAGE
         assert isinstance(headers, bool), cls.__HEADER_ERROR_MESSAGE
-        assert isinstance(s3_bucket, str), cls.__S3_BUCKET_ERROR_MESSAGE
-        assert isinstance(s3_prefix, str), cls.__S3_PREFIX_ERROR_MESSAGE
+        assert isinstance(s3_bucket, six.string_types), cls.__S3_BUCKET_ERROR_MESSAGE
+        assert isinstance(s3_prefix, six.string_types), cls.__S3_PREFIX_ERROR_MESSAGE
         # noinspection PyArgumentList
         return super(MinerConfig, cls).__new__(cls, name, delimiter, fields, id_field, headers, s3_bucket, s3_prefix)

@@ -1,6 +1,7 @@
 import os
 import shutil
 import sys
+import tempfile
 from collections import namedtuple
 
 import requests
@@ -18,10 +19,10 @@ def add_package_to_spark(session, package_name):  # todo: refocus around the cla
     :type session: pyspark.SparkSession
     :param package_name: a python imported package name
     """
+    tar_name = os.path.join(tempfile.mkdtemp(), package_name)  # todo: clean up after process exit
     package_location = os.path.abspath(os.path.join(os.path.dirname(sys.modules[package_name].__file__), os.pardir))
-    package_tar = shutil.make_archive(package_name, 'zip', package_location)
+    package_tar = shutil.make_archive(tar_name, 'zip', package_location)
     session.sparkContext.addPyFile(package_tar)
-    os.remove(package_tar)
 
 
 def describe_ec2_properties_from_instance():

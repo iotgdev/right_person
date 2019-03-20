@@ -5,14 +5,59 @@ import logging
 import sys
 import time
 from contextlib import contextmanager
+from html.parser import HTMLParser
 
 import boto3
+import pyspark
+import requests
 
-from spark_data_miner.cluster.ami.constants import BASE_IMAGE, NAME_FORMAT, COMMANDS
+from spark_data_miner.cluster.ami.constants import BASE_IMAGE, NAME_FORMAT, APT_DEPENDENCIES, \
+    PACKAGE_DEPENDENCIES, PYTHON_DEPENDENCIES, SPARK_DIRECTORY
 from spark_data_miner.cluster.components.ec2.utils import wait_for_instance, ec2_client
 from spark_data_miner.cluster.utils import describe_ec2_properties_from_instance
 
-logger = logging.getLogger('spark_data_miner.ami.utils')
+
+logger = logging.getLogger('spark_data_miner.cluster.ami.utils')
+
+
+# noinspection PyAbstractClass
+class SparkVersionFinder(HTMLParser):
+    """lightweight way of getting the spark version/link from the pyspark version"""
+
+    versions = []
+    DOWNLOAD_URL = 'http://archive.apache.org/dist/spark/spark-{}/'
+    pyspark_version = pyspark.__version__
+
+    def handle_starttag(self, tag, attrs):
+        href = dict(attrs).get('href')
+        if tag == 'a' and href.startswith('spark-') and href.endswith('.tgz') and '-bin-hadoop' in href:
+            self.versions.append(href)
+
+    def get_version(self):
+        self.feed(requests.get(self.DOWNLOAD_URL.format(self.pyspark_version)).content)
+        version = max(self.versions)
+        self.versions = []
+        return version
+
+    def get_download_link(self):
+        return self.DOWNLOAD_URL.format(self.pyspark_version) + self.get_version()
+
+
+def format_commands():
+    """formats the commands for building an AMI"""
+    COMMANDS = [
+        'timeout 180 /bin/bash -c "until stat /var/lib/cloud/instance/boot-finished 2>/dev/null; do '
+        'echo .; sleep 1; done"',
+        'apt update',
+        'apt install {apt_dependencies} -y'.format(apt_dependencies=' '.join(APT_DEPENDENCIES)),
+        'pip install {python_dependencies} --upgrade '.format(
+            python_dependencies=' '.join(PYTHON_DEPENDENCIES + PACKAGE_DEPENDENCIES)),
+        'mkdir {}'.format(SPARK_DIRECTORY),
+        'pip install pyspark=={pyspark_version}'.format(pyspark_version=pyspark.__version__),
+        'wget -qO- {spark_download_link} | tar -xvz -C {spark} --strip-components=1'.format(
+            spark_download_link=SparkVersionFinder().get_download_link(), spark=SPARK_DIRECTORY),
+    ]
+    return COMMANDS
 
 
 def get_base(region):
@@ -120,6 +165,7 @@ def run_commands(region, instance_id):
     :type region: str
     :type instance_id: str
     """
+    COMMANDS = format_commands()
     client = boto3.client('ssm', region_name=region)
     for i, cmd in enumerate(COMMANDS, start=1):
         logger.info('Issuing command {}/{}.'.format(i, len(COMMANDS)))

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import pyspark
 
 
 BASE_IMAGE = {
@@ -43,30 +42,23 @@ APT_DEPENDENCIES = [
     'openjdk-8-jdk',
 ]
 
-PYTHON_DEPENDENCIES = [
+PYTHON_DEPENDENCIES = [  # todo: link to setup.py
     'pip',
     'wheel',
     'setuptools',
-    'ujson',
-    'numpy',
-    'sklearn',
-    'mmh3',
+]
+
+PACKAGE_DEPENDENCIES = [
+    'future',
     'boto3',
+    'mmh3',
+    'numpy',
+    'pyspark',
     'requests',
-    'scipy',
+    'scipy==1.1.0',
     'scikit-learn',
-    'ulid'
+    'ujson',
+    'six',
 ]
 
 NAME_FORMAT = 'SPARK_DATA_MANAGER-{}'
-
-COMMANDS = [
-    'timeout 180 /bin/bash -c "until stat /var/lib/cloud/instance/boot-finished 2>/dev/null; do echo .; sleep 1; done"',
-    'apt update',
-    'apt install {apt_dependencies} -y'.format(apt_dependencies=' '.join(APT_DEPENDENCIES)),
-    'pip install {python_dependencies} --upgrade '.format(python_dependencies=' '.join(PYTHON_DEPENDENCIES)),
-    'mkdir {}'.format(SPARK_DIRECTORY),
-    'pip install pyspark=={pyspark_version}'.format(pyspark_version=pyspark.__version__),
-    'wget -qO- http://archive.apache.org/dist/spark/spark-{pyspark_version}/spark-{pyspark_version}-bin-hadoop2.7.tgz '
-    '| tar -xvz -C {spark} --strip-components=1'.format(pyspark_version=pyspark.__version__, spark=SPARK_DIRECTORY),
-]

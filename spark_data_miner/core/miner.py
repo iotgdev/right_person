@@ -45,7 +45,7 @@ class SparkDatasetMiner(object):
     @property
     def _dates(self):
         """Get the dates of the job. Not available until the run_date is set"""
-        return sorted(self.run_date - datetime.timedelta(days=i+1) for i in range(self.data_max_age))
+        return sorted(self.run_date - datetime.timedelta(days=i+3) for i in range(self.data_max_age))
 
     @property
     def _input_prefixes(self):
@@ -68,18 +68,8 @@ class SparkDatasetMiner(object):
         :returns: types.FuncType
         """
 
-        fields = self.config.fields
-
-        for f in fields:
-
-            f.true_val = eval(f.field_type)
-            f.getter = itemgetter(*f.field_position)
-
+        field_functions = ((f.name, f.stype, eval(f.rtype), itemgetter(*f.index)) for f in self.config.fields)
         id_field = self.config.id_field
-
-        def get_value_from_record(field, split_record):
-            value = field.true_val(field.getter(split_record))
-            return get_stored_value(field.store_as, value)
 
         def get_stored_value(store_as, value):
             if store_as == 'dict':
@@ -91,8 +81,8 @@ class SparkDatasetMiner(object):
 
         def create_record(raw):
             record = {}
-            for field in fields:
-                record[field.field_name] = get_value_from_record(field, raw)
+            for field_name, field_type, true_val, getter in field_functions:
+                record[field_name] = get_stored_value(field_type, true_val(getter(raw)))
             record['c'] = 1
             return raw[id_field], record
 
@@ -204,7 +194,7 @@ class SparkDatasetMiner(object):
 
         raw_files = session.sparkContext.textFile(record_location)
 
-        if self.config.files_contain_headers:
+        if self.config.headers:  # todo: abstract to a method
             header = raw_files.first()
             map_fn = (lambda x: self.create_record(
                 csv.reader([x], delimiter=delimiter).next()) if x != header else (None, None))
@@ -230,7 +220,7 @@ class SparkDatasetMiner(object):
         return bool(list(get_s3_connection().Bucket(self.output_s3_bucket).objects.filter(Prefix=prefix)))
 
     def create_dataset(self, session):
-        self.run_date = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+        self.run_date = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
         for date in self._dates:
             if not self.dataset_exists(date):
                 self.create_dataset_for_day(session, date)

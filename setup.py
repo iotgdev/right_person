@@ -1,6 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
+from spark_data_miner.cluster.ami.constants import PACKAGE_DEPENDENCIES
 
 about = {
     'here': os.path.abspath(os.path.dirname(__file__))
@@ -52,14 +53,5 @@ setup(
         ]
     },
     install_requires=[
-        'future',
-        'boto3',
-        'mmh3',
-        'numpy',
-        'pyspark==2.3.2',
-        'requests',
-        'scipy==1.1.0',
-        'scikit-learn',
-        'ujson',
-    ]
+    ] + PACKAGE_DEPENDENCIES
 )
