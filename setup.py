@@ -52,7 +52,7 @@ setup(
         ]
     },
     install_requires=[
-        'builtins',
+        'future',
         'boto3',
         'mmh3',
         'numpy',
