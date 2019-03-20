@@ -12,7 +12,7 @@ Usage:
 """
 from __future__ import unicode_literals
 
-import mmh3 as mmh3
+import mmh3
 import numpy
 from numpy import log
 from pyspark.mllib.classification import LogisticRegressionModel
