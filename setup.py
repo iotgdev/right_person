@@ -22,9 +22,9 @@ with open(os.path.join(about['here'], 'README.md')) as f:
 
 setup(
     # available in PKG-INFO
-    name='right_person',
+    name='right-person',
     version=about['__version__'],
-    description='Cross Customer Model machine learning for Realtime Bidding',
+    description='Targeted audience machine learning for Realtime Bidding',
     url='https://github.com/iotgdev/right_person/',
     author='iotec',
     author_email='dev@dsp.io',
