@@ -23,7 +23,7 @@ from sklearn.linear_model import LogisticRegression
 
 class RightPersonModel(object):
     """Model for evaluating users based on auction history."""
-    MAX_TRAINING_SET_SIZE = 100000
+    MAX_TRAINING_SET_SIZE = 200000
 
     def __init__(self, name, account, model_id=None, good_users=None, audience_size=0, audience_good_size=0,
                  weights=None, hash_size=1000000, l2reg=1, features=None, created_at=None, updated_at=None):
@@ -32,9 +32,9 @@ class RightPersonModel(object):
         self.account = account
 
         self.classifier = LogisticRegression(C=l2reg, fit_intercept=False, penalty='l2')
-        if weights:
-            self.classifier.coef_ = numpy.array(weights)
-            coefs = self.classifier.coef_[0].tolist()
+        if weights is not None:
+            self.classifier.coef_ = numpy.array([weights])
+            coefs = self.weights.tolist()
         else:
             coefs = []
 
@@ -58,7 +58,7 @@ class RightPersonModel(object):
     @property
     def weights(self):
         try:
-            return self.classifier.coef_.tolist()
+            return self.classifier.coef_[0]
         except AttributeError:
             return None
 
@@ -100,7 +100,7 @@ class RightPersonModel(object):
         self.classifier.fit(matrix, labels)
 
         self._predictor = LogisticRegressionModel(
-            self.classifier.coef_[0].tolist(), self.intercept, self.hash_size, 2)
+            self.weights.tolist(), self.intercept, self.hash_size, 2)
         self._predictor.clearThreshold()
 
     def get_right_person_vector(self, profile, valid_features):

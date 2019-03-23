@@ -17,6 +17,8 @@ from ioteclabs_wrapper.core.access import get_labs_dal
 from ioteclabs_wrapper.modules.right_person import RightPerson as LabsRightPersonAPI
 from right_person.models.core import RightPersonModel
 
+from retrying import retry
+
 try:
     # noinspection PyCompatibility
     from urllib.parse import urlparse
@@ -30,7 +32,7 @@ logger = logging.getLogger('right_person.stores.model_stores')
 
 class RightPersonStore(object):
 
-    api_to_model = {
+    _api_to_model = {
         'id': 'model_id',
         'account': 'account',
         'name': 'name',
@@ -43,35 +45,98 @@ class RightPersonStore(object):
         'updatedAt': 'updated_at',
     }
 
-    byte_fields = {
+    _byte_fields = {
         'weights': 'weights'
     }
 
-    json_fields = {
+    _json_fields = {
         'goodUsers': 'good_users'
     }
 
-    def _to_model(self, response):
-        model_signature = {v: response.get(k) for k, v in self.api_to_model.items()}
-        return RightPersonModel(**model_signature)
-
-    def _to_response(self, model):
-        model_fields = {k: getattr(model, v, None) for k, v in self.api_to_model.items()}
-        hash_size = model_fields['hashSize']
-        for i in self.byte_fields:
-            model_fields[i] = struct.pack('<%sf' % hash_size, *model_fields[i].ravel())
-            if isinstance(model_fields[i], str):  # python 2 to 3
-                model_fields[i] = bytes(model_fields[i])
-        for i in self.json_fields:
-            model_fields[i] = ujson.dumps(model_fields[i]).encode()
-            if isinstance(model_fields[i], str):  # python 2 to 3
-                model_fields[i] = bytes(model_fields[i])
-        return model_fields
-
     def __init__(self):
+        """create API session"""
         self.api = LabsRightPersonAPI(dal=get_labs_dal())
 
+    @property
+    def model_fields(self):
+        """
+        :rtype: list[tuple[str, str]]
+        """
+        return list(self._api_to_model.items()) + list(self._byte_fields.items()) + list(self._json_fields.items())
+
+    @property
+    def params(self):
+        """
+        :rtype: dict
+        """
+        return {'complete': True, 'verbose': True}
+
+    def _to_model(self, response):
+        """converts an api response to a model object"""
+        self._format_model_bytes(response)
+        self._format_model_json(response)
+        return RightPersonModel(**{v: response.get(k) for k, v in self.model_fields})
+
+    def _format_model_bytes(self, response):
+        """
+        gets a bytes representation from the response
+        :type response: dict
+        """
+        model_id = response['id']
+        for i, j in self._byte_fields.items():
+            if self._is_internal_resource(response[i]):
+                value = self.api.resources.retrieve(model_id, j, **self.params)
+            else:
+                value = response[i]
+            response[i] = numpy.frombuffer(value, dtype='<f4')
+
+    def _format_model_json(self, response):
+        """
+        gets model json from response
+        :type response: dict
+        """
+        model_id = response['id']
+        for i, j in self._json_fields.items():
+            if self._is_internal_resource(response[i]):
+                value = self.api.resources.retrieve(model_id, j, **self.params)
+            else:
+                value = response[i]
+            response[i] = ujson.loads(value.decode())
+
+    def _to_response(self, model):
+        """
+        converts a model object to an api response
+        :type model: RightPersonModel
+        :rtype: dict
+        """
+        response = {k: getattr(model, v, None) for k, v in self.model_fields}
+        self._format_response_bytes(response)
+        self._format_response_json(response)
+        return response
+
+    def _format_response_bytes(self, response):
+        """
+        formats the byte fields in a response
+        :type response: dict
+        """
+        hash_size = response['hashSize']
+        for i in self._byte_fields:
+            response[i] = struct.pack('<%sf' % hash_size, *response[i].ravel())
+            if isinstance(response[i], str):  # python 2 to 3
+                response[i] = bytes(response[i])
+
+    def _format_response_json(self, response):
+        """
+        formats the json fields in a response
+        :type response: dict
+        """
+        for i in self._json_fields:
+            response[i] = ujson.dumps(response[i]).encode()
+            if isinstance(response[i], str):  # python 2 to 3
+                response[i] = bytes(response[i])
+
     def _is_internal_resource(self, value):
+        """checks if a model value directs to another API endpoint"""
         try:
             url_value = urlparse(value)
         except (AttributeError, TypeError):
@@ -82,42 +147,37 @@ class RightPersonStore(object):
         return url_value.netloc == current_host_value.netloc and url_value.scheme == current_host_value.scheme
 
     # noinspection PyShadowingBuiltins
+    @retry(stop_max_attempt_number=3)
     def retrieve(self, id):
-        params = {'complete': True, 'verbose': True}
-        resp = self.api.retrieve(id, **params)
+        """retrieve a right person model from the labs API by id"""
 
-        for key, value in resp.items():
-            print(value)
-            if self._is_internal_resource(value):
-                model_id, resource = value.split('/')[-2:]
-                resp_resource = self.api.resources.retrieve(model_id, resource, **params)
-                if key in self.byte_fields:
-                    resp[key] = numpy.frombuffer(resp_resource, dtype='<f4')
-                elif key in self.json_fields:
-                    resp[key] = ujson.loads(resp_resource.decode())
-        return self._to_model(resp)
+        return self._to_model(self.api.retrieve(id, **self.params))
 
+    @retry(stop_max_attempt_number=3)
     def create(self, model):
+        """register a model from an object on the labs API"""
         if model.model_id:
             raise ValueError('This model has an id!')
-        params = {'complete': True, 'verbose': True}
-        created_model = self._to_model(self.api.create(params=params, **self._to_response(model)))
 
-        model.model_id = created_model.model_id
-        model.created_at = created_model.created_at
-        model.updated_at = created_model.updated_at
-        return model
+        return self._to_model(self.api.create(params=self.params, **self._to_response(model)))
 
+    @retry(stop_max_attempt_number=3)
     def update(self, model):
+        """update a model from an object on the labs API"""
         if not model.model_id:
             raise ValueError('This model has no id!')
-        params = {'complete': True, 'verbose': True}
-        updated_model = self._to_model(self.api.update(params=params, **self._to_response(model)))
-        model.updated_at = updated_model.updated_at
-        return model
 
+        return self.api.update(params=self.params, **self._to_response(model))
+
+    @retry(stop_max_attempt_number=3)
     def _list_iter(self, **kwargs):
-        params = {'complete': True, 'verbose': True, 'offset': 0, 'limit': 100}
+        """
+        iterate through models one at a time, yielding
+        :type kwargs: dict[str, str]
+        :rtype: list[RightPersonModel]
+        """
+        params = dict(self.params, offset=0, limit=100)
+        # noinspection PyTypeChecker
         params.update(kwargs, fields='id')
         continuing = True
 
@@ -129,6 +189,12 @@ class RightPersonStore(object):
             continuing = response['next']
 
     def list(self, as_list=False, **kwargs):
+        """
+        List right person models, choosing an iterator or list output
+        :type as_list: bool
+        :type kwargs: dict
+        :rtype: list[RightPersonModel]
+        """
         if as_list:
             return list(self._list_iter(**kwargs))
         else:

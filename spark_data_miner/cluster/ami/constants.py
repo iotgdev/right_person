@@ -42,7 +42,7 @@ APT_DEPENDENCIES = [
     'openjdk-8-jdk',
 ]
 
-PYTHON_DEPENDENCIES = [  # todo: link to setup.py
+PYTHON_DEPENDENCIES = [
     'pip',
     'wheel',
     'setuptools',
@@ -59,6 +59,8 @@ PACKAGE_DEPENDENCIES = [
     'scikit-learn',
     'ujson',
     'six',
+    'ioteclabs-wrapper',
+    'retrying',
 ]
 
 NAME_FORMAT = 'SPARK_DATA_MANAGER-{}'

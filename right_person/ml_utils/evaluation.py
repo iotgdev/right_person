@@ -9,6 +9,9 @@ from __future__ import unicode_literals
 from numpy import log, mean
 
 
+# TODO: replace with nebula
+
+
 TRAIN_TEST_RATIO = 0.8
 
 
@@ -68,6 +71,8 @@ def get_best_model(model_scores):  # todo: refactor so only a list of models get
     best_model = None
 
     for model, information_gain in model_scores:
+
+        print(model, information_gain)
 
         if information_gain > best_information_gain:
             best_information_gain = information_gain
