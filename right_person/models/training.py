@@ -27,13 +27,10 @@ def train_model(audience, model, cross_validation_folds=1, hyperparameters=None)
     :type hyperparameters: dict[str, list[float]]
     :rtype: RightPersonModel
     """
-    model.audience_size = count_profiles(audience)
-    print(model.audience_size)
-
-    # we have to filter the good users from the target group for training purposes
     good_set = filter_profiles(audience, lambda user_profile: user_profile[0] in model.good_users)
+    
+    model.audience_size = count_profiles(audience)
     model.audience_good_size = count_profiles(good_set)
-    print(model.audience_good_size)
 
     if not model.audience_good_size:
         logger.exception('model "{}" ({}) cannot be trained - no good users found in audience'.format(
@@ -41,7 +38,6 @@ def train_model(audience, model, cross_validation_folds=1, hyperparameters=None)
         return
 
     normal_set = sample_profiles(audience, model.downsampling_rate)
-    print(count_profiles(normal_set))
 
     labelled_good_profiles = map_profiles(good_set, lambda user_profile: (user_profile[1], 1))
     labelled_normal_profiles = map_profiles(normal_set, lambda user_profile: (user_profile[1], 0))

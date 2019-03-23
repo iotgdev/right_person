@@ -72,8 +72,6 @@ def get_best_model(model_scores):  # todo: refactor so only a list of models get
 
     for model, information_gain in model_scores:
 
-        print(model, information_gain)
-
         if information_gain > best_information_gain:
             best_information_gain = information_gain
             best_model = model
