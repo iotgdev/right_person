@@ -28,7 +28,7 @@ def train_model(audience, model, cross_validation_folds=1, hyperparameters=None)
     :rtype: RightPersonModel
     """
     good_set = filter_profiles(audience, lambda user_profile: user_profile[0] in model.good_users)
-    
+
     model.audience_size = count_profiles(audience)
     model.audience_good_size = count_profiles(good_set)
 
