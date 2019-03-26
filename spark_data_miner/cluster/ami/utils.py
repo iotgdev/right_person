@@ -72,7 +72,7 @@ def get_base(region):
     return sorted(images, key=lambda x: x['CreationDate'], reverse=True)[0]
 
 
-def create_ami_instance(region, subnet_id, profile_arn, image_id, instance_type='t3.small'):
+def create_ami_instance(region, subnet_id, profile_arn, image_id, instance_type='t3.medium'):
     """
     creates an ami instance. This instance acts as the template of the AMI
     :type region: str
