@@ -133,7 +133,7 @@ class ClusterManager(object):
                     KeyName=key_name, SecurityGroupIds=security_group_ids, TagSpecifications=tag_specs, MinCount=1,
                 )['Instances'][0]
             except ClientError as e:
-                logger.exception(e, exc_info=True)
+                logger.warning(e, exc_info=True)
                 max_retrys -= 1
                 time.sleep(10)
         instance = wait_for_instance(region, instance)
