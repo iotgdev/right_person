@@ -124,15 +124,18 @@ class ClusterManager(object):
         instance_profile = self.registry['instance_profile']
         security_group_ids = [sg['GroupId'] for sg in security_groups + self.registry['security_groups']]
         instance = None
-        while instance is None:
+        max_retrys = 5
+        while instance is None and max_retrys >= 0:
             try:
                 instance = ec2_client(region).run_instances(
                     ImageId=self.ami['ImageId'], SubnetId=subnet, InstanceType=self.plan.master_type, MaxCount=1,
                     UserData=MASTER_USER_DATA, IamInstanceProfile={'Name': instance_profile['InstanceProfileName']},
                     KeyName=key_name, SecurityGroupIds=security_group_ids, TagSpecifications=tag_specs, MinCount=1,
                 )['Instances'][0]
-            except ClientError:
-                pass
+            except ClientError as e:
+                logger.exception(e, exc_info=True)
+                max_retrys -= 1
+                time.sleep(10)
         instance = wait_for_instance(region, instance)
         self.__registry['cluster_master'] = instance
 
