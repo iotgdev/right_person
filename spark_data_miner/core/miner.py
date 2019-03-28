@@ -45,7 +45,7 @@ class SparkDatasetMiner(object):
     @property
     def _dates(self):
         """Get the dates of the job. Not available until the run_date is set"""
-        return sorted(self.run_date - datetime.timedelta(days=i+3) for i in range(self.data_max_age))
+        return sorted(self.run_date - datetime.timedelta(days=i+1) for i in range(self.data_max_age))
 
     @property
     def _input_prefixes(self):
