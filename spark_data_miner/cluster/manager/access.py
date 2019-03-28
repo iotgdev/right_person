@@ -150,6 +150,7 @@ class ClusterManager(object):
         security_group_ids = [sg['GroupId'] for sg in security_groups + self.registry['security_groups'][-1:]]
         # master_host = self.registry['cluster_master']['PrivateIpAddress']
         max_retrys = 5
+        instances = None
         while instances is None:
             try:
                 instances = ec2_client(region).run_instances(
