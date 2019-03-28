@@ -149,12 +149,21 @@ class ClusterManager(object):
         instance_profile = self.registry['instance_profile']['Arn']
         security_group_ids = [sg['GroupId'] for sg in security_groups + self.registry['security_groups'][-1:]]
         # master_host = self.registry['cluster_master']['PrivateIpAddress']
-        instances = ec2_client(region).run_instances(
-            ImageId=image['ImageId'], SubnetId=subnet, InstanceType=self.plan.node_type, KeyName=key_name,
-            MaxCount=self.plan.node_count, MinCount=self.plan.node_count, SecurityGroupIds=security_group_ids,
-            UserData=NODE_USER_DATA.format(master_address=private_ip, spark_port=SPARK_PORT),  # private_ip=master_ip
-            IamInstanceProfile={'Arn': instance_profile}, TagSpecifications=tag_specs,
-        )['Instances']
+        max_retrys = 5
+        while instances is None:
+            try:
+                instances = ec2_client(region).run_instances(
+                    ImageId=image['ImageId'], SubnetId=subnet, InstanceType=self.plan.node_type, KeyName=key_name,
+                    MaxCount=self.plan.node_count, MinCount=self.plan.node_count, SecurityGroupIds=security_group_ids,
+                    UserData=NODE_USER_DATA.format(master_address=private_ip, spark_port=SPARK_PORT),  # private_ip=master_ip
+                    IamInstanceProfile={'Arn': instance_profile}, TagSpecifications=tag_specs,
+                )['Instances']
+            except ClientError:
+                if max_retrys <= 0:
+                    raise
+                max_retrys -= 1
+                time.sleep(10)
+
         instance_ids = [instance['InstanceId'] for instance in instances]
         retries = max(len(instances), 6)
         while not all(instance['State']['Name'] == 'running' for instance in instances) and retries > 0:
