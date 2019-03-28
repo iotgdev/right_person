@@ -18,8 +18,8 @@ def spark_data_mining_session(plan):
     region = describe_ec2_properties_from_instance().region
     assert ami_exists(region), 'A valid AMI does not exist in this region ({})'.format(NAME_FORMAT.format('*'))
     with ClusterManager(plan=plan) as inventory:
-        # master_ip = inventory['cluster_master']['PrivateIpAddress']
-        session = get_new_right_person_spark_session(None)
+        master_ip = inventory['cluster_master']['PrivateIpAddress']
+        session = get_new_right_person_spark_session(master_ip)
         add_package_to_spark(session, 'spark_data_miner')
         yield session
 

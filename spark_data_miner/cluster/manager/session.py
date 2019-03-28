@@ -36,7 +36,7 @@ def _get_right_person_spark_config(master_ip):
     global _config
     if not _config:
         _config = SparkConf().setAppName('spark-data-miner')
-        _config.setMaster('local[*]')  # 'spark://{}:{}'.format(master_ip, SPARK_PORT))
+        _config.setMaster('spark://{}:{}'.format(master_ip, SPARK_PORT))
         _config.set('spark.jars.packages', 'org.apache.hadoop:hadoop-aws:2.7.5,com.amazonaws:aws-java-sdk:1.7.4')
         _config.get("spark.rpc.message.maxSize", "256")
         _config.set('spark.rdd.compress', 'True')

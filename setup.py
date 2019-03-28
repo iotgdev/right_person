@@ -54,5 +54,6 @@ setup(
         ]
     },
     install_requires=[
+        'pyspark==2.3.3'
     ] + PACKAGE_DEPENDENCIES
 )

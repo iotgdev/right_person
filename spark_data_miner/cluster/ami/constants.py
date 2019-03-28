@@ -53,7 +53,6 @@ PACKAGE_DEPENDENCIES = [
     'boto3',
     'mmh3',
     'numpy',
-    'pyspark',
     'requests',
     'scipy==1.1.0',
     'scikit-learn',

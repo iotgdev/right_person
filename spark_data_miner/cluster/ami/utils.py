@@ -51,7 +51,7 @@ def format_commands():
         'apt update',
         'apt install {apt_dependencies} -y'.format(apt_dependencies=' '.join(APT_DEPENDENCIES)),
         'pip install {python_dependencies} --upgrade '.format(
-            python_dependencies=' '.join(PYTHON_DEPENDENCIES + [i for i in PACKAGE_DEPENDENCIES if i != 'pyspark'])),
+            python_dependencies=' '.join(PYTHON_DEPENDENCIES + PACKAGE_DEPENDENCIES)),
         'mkdir {}'.format(SPARK_DIRECTORY),
         'pip install pyspark=={pyspark_version}'.format(pyspark_version=pyspark.__version__),
         'wget -qO- {spark_download_link} | tar -xvz -C {spark} --strip-components=1'.format(
