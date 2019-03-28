@@ -148,7 +148,7 @@ class ClusterManager(object):
         image = get_ami(region)
         instance_profile = self.registry['instance_profile']['Arn']
         security_group_ids = [sg['GroupId'] for sg in security_groups + self.registry['security_groups'][-1:]]
-        master_host = self.registry['cluster_master']['PrivateIpAddress']
+        # master_host = self.registry['cluster_master']['PrivateIpAddress']
         instances = ec2_client(region).run_instances(
             ImageId=image['ImageId'], SubnetId=subnet, InstanceType=self.plan.node_type, KeyName=key_name,
             MaxCount=self.plan.node_count, MinCount=self.plan.node_count, SecurityGroupIds=security_group_ids,
