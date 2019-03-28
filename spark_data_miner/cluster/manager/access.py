@@ -74,14 +74,14 @@ class ClusterManager(object):
             self.__create_role()
             self.__create_instance_profile()
             self.__create_security_groups()
-            self.__create_master()
+            # self.__create_master()
             self.__create_nodes()
 
     def destroy(self):
         """destroys the cluster"""
         if self.__registry:
             self.__destroy_nodes()
-            self.__destroy_master()
+            # self.__destroy_master()
             self.__destroy_security_groups()
             self.__destroy_instance_profile()
             self.__destroy_role()
@@ -115,30 +115,30 @@ class ClusterManager(object):
         ingress_rules = get_ingress_rules(ip_addresses, total_group_access, ports)
         ec2_client(region).authorize_security_group_ingress(GroupId=input_group_id, IpPermissions=ingress_rules)
 
-    def __create_master(self):
-        """creates the cluster's master node"""
-        instance_name = 'spark-data-miner-master-{}-{}'.format(self.cluster_id, datetime.datetime.now().strftime('%s'))
-        tag_specs = [{'ResourceType': 'instance', 'Tags': [{'Key': 'Name', 'Value': instance_name}]}]
-        region, vpc_id, subnet, security_groups, key_name, public_ip, private_ip, profile = self.instance_properties
-
-        instance_profile = self.registry['instance_profile']
-        security_group_ids = [sg['GroupId'] for sg in security_groups + self.registry['security_groups']]
-        instance = None
-        max_retrys = 5
-        while instance is None:
-            try:
-                instance = ec2_client(region).run_instances(
-                    ImageId=self.ami['ImageId'], SubnetId=subnet, InstanceType=self.plan.master_type, MaxCount=1,
-                    UserData=MASTER_USER_DATA, IamInstanceProfile={'Name': instance_profile['InstanceProfileName']},
-                    KeyName=key_name, SecurityGroupIds=security_group_ids, TagSpecifications=tag_specs, MinCount=1,
-                )['Instances'][0]
-            except ClientError:
-                if max_retrys <= 0:
-                    raise
-                max_retrys -= 1
-                time.sleep(10)
-        instance = wait_for_instance(region, instance)
-        self.__registry['cluster_master'] = instance
+    # def __create_master(self):
+    #     """creates the cluster's master node"""
+    #     instance_name = 'spark-data-miner-master-{}-{}'.format(self.cluster_id, datetime.datetime.now().strftime('%s'))
+    #     tag_specs = [{'ResourceType': 'instance', 'Tags': [{'Key': 'Name', 'Value': instance_name}]}]
+    #     region, vpc_id, subnet, security_groups, key_name, public_ip, private_ip, profile = self.instance_properties
+    #
+    #     instance_profile = self.registry['instance_profile']
+    #     security_group_ids = [sg['GroupId'] for sg in security_groups + self.registry['security_groups']]
+    #     instance = None
+    #     max_retrys = 5
+    #     while instance is None:
+    #         try:
+    #             instance = ec2_client(region).run_instances(
+    #                 ImageId=self.ami['ImageId'], SubnetId=subnet, InstanceType=self.plan.master_type, MaxCount=1,
+    #                 UserData=MASTER_USER_DATA, IamInstanceProfile={'Name': instance_profile['InstanceProfileName']},
+    #                 KeyName=key_name, SecurityGroupIds=security_group_ids, TagSpecifications=tag_specs, MinCount=1,
+    #             )['Instances'][0]
+    #         except ClientError:
+    #             if max_retrys <= 0:
+    #                 raise
+    #             max_retrys -= 1
+    #             time.sleep(10)
+    #     instance = wait_for_instance(region, instance)
+    #     self.__registry['cluster_master'] = instance
 
     def __create_nodes(self):
         """creates the non-master cluster nodes"""
@@ -152,7 +152,7 @@ class ClusterManager(object):
         instances = ec2_client(region).run_instances(
             ImageId=image['ImageId'], SubnetId=subnet, InstanceType=self.plan.node_type, KeyName=key_name,
             MaxCount=self.plan.node_count, MinCount=self.plan.node_count, SecurityGroupIds=security_group_ids,
-            UserData=NODE_USER_DATA.format(master_address=master_host, spark_port=SPARK_PORT),
+            UserData=NODE_USER_DATA.format(master_address=private_ip, spark_port=SPARK_PORT),  # private_ip=master_ip
             IamInstanceProfile={'Arn': instance_profile}, TagSpecifications=tag_specs,
         )['Instances']
         instance_ids = [instance['InstanceId'] for instance in instances]
@@ -176,17 +176,17 @@ class ClusterManager(object):
             terminated = ec2_client(region).terminate_instances(InstanceIds=instance_ids)['TerminatingInstances']
         del self.__registry['cluster_nodes']
 
-    def __destroy_master(self):
-        """destroys the master cluster node"""
-        region = self.instance_properties.region
-        instance_id = self.registry['cluster_master']['InstanceId']
-        terminated = ec2_client(region).terminate_instances(InstanceIds=[instance_id])['TerminatingInstances']
-        max_retrys = 18
-        while any(i['CurrentState']['Name'] != 'terminated' for i in terminated) and max_retrys > 0:
-            time.sleep(10)
-            max_retrys -= 1
-            terminated = ec2_client(region).terminate_instances(InstanceIds=[instance_id])['TerminatingInstances']
-        del self.__registry['cluster_master']
+    # def __destroy_master(self):
+    #     """destroys the master cluster node"""
+    #     region = self.instance_properties.region
+    #     instance_id = self.registry['cluster_master']['InstanceId']
+    #     terminated = ec2_client(region).terminate_instances(InstanceIds=[instance_id])['TerminatingInstances']
+    #     max_retrys = 18
+    #     while any(i['CurrentState']['Name'] != 'terminated' for i in terminated) and max_retrys > 0:
+    #         time.sleep(10)
+    #         max_retrys -= 1
+    #         terminated = ec2_client(region).terminate_instances(InstanceIds=[instance_id])['TerminatingInstances']
+    #     del self.__registry['cluster_master']
 
     def __destroy_security_groups(self):
         """destroys the security groups"""
