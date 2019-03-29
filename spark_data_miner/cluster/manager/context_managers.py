@@ -19,10 +19,10 @@ def spark_data_mining_session(plan):
     region = describe_ec2_properties_from_instance().region
     assert ami_exists(region), 'A valid AMI does not exist in this region ({})'.format(NAME_FORMAT.format('*'))
     instance_memory = get_instance_memory(plan.node_type)
-    assert instance_memory >= 8, 'each spark node instance requires 8 GiB of memory'
+    assert instance_memory >= 4, 'each spark node instance requires 4 GiB of memory'
     with ClusterManager(plan=plan) as inventory:
         master_ip = inventory['cluster_master']['PrivateIpAddress']
-        useable_memory = int((instance_memory - 3) * 0.9)  # TODO: parameterise
+        useable_memory = int(round((instance_memory - 3) * 0.9, 0))  # TODO: parameterise
         session = get_new_right_person_spark_session(master_ip, useable_memory)
         add_package_to_spark(session, 'spark_data_miner')
         yield session
