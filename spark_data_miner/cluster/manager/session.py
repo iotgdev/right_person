@@ -44,7 +44,7 @@ def _get_right_person_spark_config(master_ip, instance_memory):
 
         _config.set('spark.blockManager.port', str(BLOCK_MANAGER_PORT))
         _config.set('spark.driver.port', str(TASK_SCHEDULER_PORT))
-        _config.set('spark.executor.memory', str(instance_memory))
+        _config.set('spark.executor.memory', str(instance_memory) + 'g')
 
         _config.set('spark.driver.maxResultSize', '1536m')
 
