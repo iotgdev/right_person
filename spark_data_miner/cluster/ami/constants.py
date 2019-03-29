@@ -50,7 +50,7 @@ PYTHON_DEPENDENCIES = [
 
 PACKAGE_DEPENDENCIES = [
     'future',
-    'boto3',
+    'boto3>=1.9.123',
     'mmh3',
     'numpy',
     'requests',
