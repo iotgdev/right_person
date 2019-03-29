@@ -85,10 +85,7 @@ class RightPersonStore(object):
         model_id = response['id']
         for i, j in self._byte_fields.items():
             if self._is_internal_resource(response[i]):
-                value = self.api.resources.retrieve(model_id, j, **self.params)
-            else:
-                value = response[i]
-            response[i] = numpy.frombuffer(value, dtype='<f4')
+                response[i] = numpy.frombuffer(self.api.resources.retrieve(model_id, j, **self.params), dtype='<f4')
 
     def _format_model_json(self, response):
         """
@@ -98,10 +95,7 @@ class RightPersonStore(object):
         model_id = response['id']
         for i, j in self._json_fields.items():
             if self._is_internal_resource(response[i]):
-                value = self.api.resources.retrieve(model_id, j, **self.params)
-            else:
-                value = response[i]
-            response[i] = ujson.loads(value.decode())
+                response[i] = ujson.loads(self.api.resources.retrieve(model_id, j, **self.params))
 
     def _to_response(self, model):
         """
