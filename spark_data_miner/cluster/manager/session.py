@@ -23,7 +23,7 @@ _config = None
 logger = logging.getLogger('right_person.data_mining.cluster.session')
 
 
-def _get_right_person_spark_config(master_ip):
+def _get_right_person_spark_config(master_ip, instance_memory):
     """
     Creates a config for the right_person spark cluster
     Contains specific cluster parameters including extra jars
@@ -31,6 +31,7 @@ def _get_right_person_spark_config(master_ip):
     The config is a singleton and won't be recreated once set.
 
     :param str master_ip: the ip of the clusters master node
+    :param int instance_memory: the memory of the executor instances
     :rtype: pyspark.SparkConf
     """
     global _config
@@ -43,6 +44,7 @@ def _get_right_person_spark_config(master_ip):
 
         _config.set('spark.blockManager.port', str(BLOCK_MANAGER_PORT))
         _config.set('spark.driver.port', str(TASK_SCHEDULER_PORT))
+        _config.set('spark.executor.memory', str(instance_memory))
 
         _config.set('spark.driver.maxResultSize', '1536m')
 
@@ -54,20 +56,21 @@ def _get_right_person_spark_config(master_ip):
     return _config
 
 
-def get_new_right_person_spark_session(master_ip):
+def get_new_right_person_spark_session(master_ip, instance_memory):
     """
     Create a session to communicate with the right_person spark cluster.
 
     :param str master_ip: the ip of the clusters master node
+    :param int instance_memory: the memory of the executor instances
     :rtype: pyspark.SparkSession
     """
 
     try:
-        spark_context = SparkContext(conf=_get_right_person_spark_config(master_ip))
+        spark_context = SparkContext(conf=_get_right_person_spark_config(master_ip, instance_memory))
     except (Exception, ):  # stop any existing contexts, we don't want them...
         logger.info('A spark context exists already on this machine.')
         SparkContext.getOrCreate().stop()
-        spark_context = SparkContext(conf=_get_right_person_spark_config(master_ip))
+        spark_context = SparkContext(conf=_get_right_person_spark_config(master_ip, instance_memory))
 
     spark_session = SparkSession(spark_context)
     return spark_session
