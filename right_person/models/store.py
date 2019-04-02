@@ -161,7 +161,7 @@ class RightPersonStore(object):
         if not model.model_id:
             raise ValueError('This model has no id!')
 
-        return self.api.update(params=self.params, **self._to_response(model))
+        return self._to_model(self.api.update(params=self.params, **self._to_response(model)))
 
     @retry(stop_max_attempt_number=3)
     def _list_iter(self, **kwargs):

@@ -63,13 +63,17 @@ class RightPersonModel(object):
             return None
 
     @property
-    def downsampling_rate(self):
+    def sampling_fraction(self):
         if not self.audience_size:
             return 1.0
         max_good_ratio = 10.0
         normal_ratio = float(self.MAX_TRAINING_SET_SIZE - self.audience_good_size) / self.audience_size
         good_ratio = float(self.audience_good_size * max_good_ratio) / self.audience_size
         return min(1.0, normal_ratio, good_ratio)
+
+    @property
+    def downsampling_rate(self):
+        return (self.audience_size * self.sampling_fraction) / (self.audience_size - self.audience_good_size)
 
     @property
     def intercept(self):
@@ -145,8 +149,8 @@ class RightPersonModel(object):
         column_indexes = []
         row_indexes = []
 
-        map(column_indexes.extend, vectors)  # super speedy speed round
-        map(row_indexes.extend, ([i] * len(j) for i, j in enumerate(vectors)))
+        list(map(column_indexes.extend, vectors))  # super speedy speed round
+        list(map(row_indexes.extend, ([i] * len(j) for i, j in enumerate(vectors))))
 
         data = [True] * len(column_indexes)
         matrix = coo_matrix((data, (row_indexes, column_indexes)), shape=(len(vectors), self.hash_size), dtype=bool)

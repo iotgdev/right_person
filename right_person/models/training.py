@@ -37,10 +37,11 @@ def train_model(audience, model, cross_validation_folds=1, hyperparameters=None)
             model.name, model.model_id))
         return
 
-    normal_set = sample_profiles(audience, model.downsampling_rate)
+    normal_set = filter_profiles(audience, lambda user_profile: user_profile[0] not in model.good_users)
+    normal_sample = sample_profiles(normal_set, model.sampling_fraction)
 
     labelled_good_profiles = map_profiles(good_set, lambda user_profile: (user_profile[1], 1))
-    labelled_normal_profiles = map_profiles(normal_set, lambda user_profile: (user_profile[1], 0))
+    labelled_normal_profiles = map_profiles(normal_sample, lambda user_profile: (user_profile[1], 0))
 
     optimised_model = get_optimised_model(
         labelled_good_profiles, labelled_normal_profiles, model, cross_validation_folds, hyperparameters or {})
@@ -50,7 +51,7 @@ def train_model(audience, model, cross_validation_folds=1, hyperparameters=None)
 
 def get_shuffled_training_data(profiles, labels, seed):
     """shuffles training data for cross validation"""
-    training_data = zip(profiles, labels)
+    training_data = list(zip(profiles, labels))
     random.Random(seed).shuffle(training_data)
     return zip(*training_data)
 
@@ -94,11 +95,9 @@ def get_optimised_model(labelled_good, labelled_normal, model, cross_validation_
     """
 
     training_data = union_profiles(labelled_good, labelled_normal)
-    # todo: investigate shuffling the data here
 
     model_variants = [
-        cv_model for model in get_candidate_models(model, hyperparameters)
-        for cv_model in repeat(model, cross_validation_folds)
+        m for cv_model in repeat(model, cross_validation_folds) for m in get_candidate_models(cv_model, hyperparameters)
     ]
 
     total_training_data = flat_map_profiles(training_data, lambda data: [(i, data) for i in range(len(model_variants))])
