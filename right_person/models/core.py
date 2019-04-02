@@ -73,6 +73,8 @@ class RightPersonModel(object):
 
     @property
     def downsampling_rate(self):
+        if not self.audience_size:
+            return 1.0
         return (self.audience_size * self.sampling_fraction) / (self.audience_size - self.audience_good_size)
 
     @property

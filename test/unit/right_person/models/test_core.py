@@ -16,6 +16,10 @@ class TestNewModel(unittest.TestCase):
         model = RightPersonModel('name', 'account')
         self.assertEqual(model.downsampling_rate, 1.0)
 
+    def test_sampling_fraction(self):
+        model = RightPersonModel('name', 'account')
+        self.assertEqual(model.sampling_fraction, 1.0)
+
     def test_intercept(self):
         model = RightPersonModel('name', 'account')
         self.assertEqual(model.intercept, 0)
