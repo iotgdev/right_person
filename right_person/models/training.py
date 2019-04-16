@@ -5,6 +5,7 @@ Functions to train (start to finish, including cross validation) right person mo
 """
 from __future__ import unicode_literals
 
+import copy
 import logging
 import random
 from itertools import repeat
@@ -69,7 +70,7 @@ def get_model_variant_training_function(models, cross_validation_folds):
         training_profiles, training_labels = zip(*map(itemgetter(1), training_data))
 
         seed = model_variant_index % cross_validation_folds
-        model = models[model_variant_index]
+        model = copy.deepcopy(models[model_variant_index])
 
         shuffled_profiles, shuffled_labels = get_shuffled_training_data(training_profiles, training_labels, seed)
 
