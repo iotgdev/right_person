@@ -112,7 +112,7 @@ def collect_profiles(profiles):
     :rtype: list
     """
     if isinstance(profiles, pyspark.RDD):
-        profiles = profiles.collect()
+        return profiles.collect()
     return profiles
 
 
