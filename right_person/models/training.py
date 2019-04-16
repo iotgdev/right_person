@@ -5,14 +5,12 @@ Functions to train (start to finish, including cross validation) right person mo
 """
 from __future__ import unicode_literals
 
-import copy
 import logging
 import random
 from itertools import repeat
-from operator import itemgetter
 
 from right_person.ml_utils.data.transformations import filter_profiles, sample_profiles, map_profiles, \
-    count_profiles, union_profiles, flat_map_profiles, partition_profiles, map_profile_partitions, collect_profiles
+    count_profiles, union_profiles, collect_profiles, match_profiles_type
 from right_person.ml_utils.cross_validation import get_candidate_models
 from right_person.ml_utils.evaluation import TRAIN_TEST_RATIO, get_information_gain, get_best_model
 
@@ -65,12 +63,14 @@ def get_model_variant_training_function(models, cross_validation_folds):
     :rtype: Callable
     """
 
-    def model_variant_training_function(model_variant_index, training_data):
+    def model_variant_training_function(model_training_data):
 
-        training_profiles, training_labels = zip(*map(itemgetter(1), training_data))
+        model_variant_index, training_data = model_training_data
+
+        training_profiles, training_labels = zip(*training_data)
 
         seed = model_variant_index % cross_validation_folds
-        model = copy.deepcopy(models[model_variant_index])
+        model = models[model_variant_index]
 
         shuffled_profiles, shuffled_labels = get_shuffled_training_data(training_profiles, training_labels, seed)
 
@@ -79,7 +79,7 @@ def get_model_variant_training_function(models, cross_validation_folds):
 
         information_gain = get_information_gain(shuffled_profiles, shuffled_labels, model)
 
-        return [(model, information_gain)]
+        return model, information_gain
 
     return model_variant_training_function
 
@@ -95,17 +95,17 @@ def get_optimised_model(labelled_good, labelled_normal, model, cross_validation_
     :rtype: RightPersonModel|None
     """
 
-    training_data = union_profiles(labelled_good, labelled_normal)
+    training_data = collect_profiles(union_profiles(labelled_good, labelled_normal))
 
     model_variants = [
         m for cv_model in repeat(model, cross_validation_folds) for m in get_candidate_models(cv_model, hyperparameters)
     ]
 
-    total_training_data = flat_map_profiles(training_data, lambda data: [(i, data) for i in range(len(model_variants))])
+    total_training_data = match_profiles_type([(i, training_data) for i in range(len(model_variants))], labelled_good)
 
-    model_variant_training_data = partition_profiles(total_training_data, len(model_variants))
     model_variant_training_function = get_model_variant_training_function(model_variants, cross_validation_folds)
+    trained_model_variants = map_profiles(total_training_data, model_variant_training_function)
 
-    trained_model_variants = map_profile_partitions(model_variant_training_data, model_variant_training_function)
+    collected_trained_model_variants = collect_profiles(trained_model_variants)
 
-    return get_best_model(collect_profiles(trained_model_variants))
+    return get_best_model(collected_trained_model_variants)

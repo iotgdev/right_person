@@ -127,3 +127,16 @@ def count_profiles(profiles):
         return profiles.count()
     else:
         return len(profiles)
+
+
+def match_profiles_type(profiles, match):
+    """
+    returns profiles cast to type of match
+    :type profiles: list|pyspark.RDD
+    :type match: list|pyspark.RDD
+    :rtype: list|pyspark.RDD
+    """
+    if isinstance(match, pyspark.RDD) and not isinstance(profiles, pyspark.RDD):
+        return match.context.parallelize(profiles, len(profiles))
+    else:
+        return collect_profiles(profiles)
