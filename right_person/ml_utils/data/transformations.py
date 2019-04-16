@@ -89,7 +89,7 @@ def map_profile_partitions(partitioned_profiles, map_fn):
     if isinstance(partitioned_profiles, pyspark.RDD):
         return partitioned_profiles.mapPartitionsWithIndex(map_fn)
     else:
-        return sum([map_fn(index, p) for index, partition in partitioned_profiles for p in partition], [])
+        return sum([map_fn(index, partition) for index, partition in partitioned_profiles], [])
 
 
 def flat_map_profiles(profiles, map_fn):
