@@ -53,7 +53,7 @@ def get_shuffled_training_data(training_data, seed, model):
 
     good_limit = model.audience_good_size / 2
 
-    while list(zip(*training_data))[1][:int(len(training_data) * TRAIN_TEST_RATIO)].count(1) < good_limit:
+    while list(zip(*training_data))[1][:int(len(training_data) * TRAIN_TEST_RATIO)].count(1) > good_limit:
         random.Random(seed).shuffle(training_data)
 
     return list(zip(*training_data))
