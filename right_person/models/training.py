@@ -10,7 +10,7 @@ import random
 from itertools import repeat
 
 from right_person.ml_utils.data.transformations import filter_profiles, sample_profiles, map_profiles, \
-    count_profiles, union_profiles, collect_profiles, match_profiles_type
+    count_profiles, union_profiles, collect_profiles
 from right_person.ml_utils.cross_validation import get_candidate_models
 from right_person.ml_utils.evaluation import TRAIN_TEST_RATIO, get_information_gain, get_best_model
 
@@ -48,40 +48,15 @@ def train_model(audience, model, cross_validation_folds=1, hyperparameters=None)
     return optimised_model
 
 
-def get_shuffled_training_data(profiles, labels, seed):
+def get_shuffled_training_data(training_data, seed, model):
     """shuffles training data for cross validation"""
-    training_data = list(zip(profiles, labels))
-    random.Random(seed).shuffle(training_data)
-    return zip(*training_data)
 
+    good_limit = model.audience_good_size / 2
 
-def get_model_variant_training_function(models, cross_validation_folds):
-    """
-    Provides a model specific function for training and evaluating a model.
-    :type models: list[RightPersonModel]
-    :type cross_validation_folds: float
-    :rtype: Callable
-    """
+    while list(zip(*training_data))[1][:int(len(training_data) * TRAIN_TEST_RATIO)].count(1) < good_limit:
+        random.Random(seed).shuffle(training_data)
 
-    def model_variant_training_function(model_training_data):
-
-        model_variant_index, training_data = model_training_data
-
-        training_profiles, training_labels = zip(*training_data)
-
-        seed = int(model_variant_index / cross_validation_folds)
-        model = models[model_variant_index]
-
-        shuffled_profiles, shuffled_labels = get_shuffled_training_data(training_profiles, training_labels, seed)
-
-        while shuffled_labels[:int(len(training_profiles) * TRAIN_TEST_RATIO)].count(1) < model.audience_good_size / 2:
-            shuffled_profiles, shuffled_labels = get_shuffled_training_data(training_profiles, training_labels, seed)
-
-        information_gain = get_information_gain(shuffled_profiles, shuffled_labels, model)
-
-        return model, information_gain
-
-    return model_variant_training_function
+    return list(zip(*training_data))
 
 
 def get_optimised_model(labelled_good, labelled_normal, model, cross_validation_folds, hyperparameters):
@@ -94,18 +69,22 @@ def get_optimised_model(labelled_good, labelled_normal, model, cross_validation_
     :type hyperparameters: dict[str, list[float]]
     :rtype: RightPersonModel|None
     """
+    # TODO: revisit parallel training
 
-    training_data = collect_profiles(union_profiles(labelled_good, labelled_normal))
+    training_data = collect_profiles(union_profiles(labelled_good, labelled_normal))  # MAX 200K
 
     model_variants = [
         m for cv_model in repeat(model, cross_validation_folds) for m in get_candidate_models(cv_model, hyperparameters)
     ]
 
-    total_training_data = match_profiles_type([(i, training_data) for i in range(len(model_variants))], labelled_good)
+    trained_model_variants = []
 
-    model_variant_training_function = get_model_variant_training_function(model_variants, cross_validation_folds)
-    trained_model_variants = map_profiles(total_training_data, model_variant_training_function)
+    for model_variant_index, variant in enumerate(model_variants):
 
-    collected_trained_model_variants = collect_profiles(trained_model_variants)
+        seed = int(model_variant_index / cross_validation_folds)
 
-    return get_best_model(collected_trained_model_variants)
+        shuffled_profiles, shuffled_labels = get_shuffled_training_data(training_data, seed, model)
+        information_gain = get_information_gain(shuffled_profiles, shuffled_labels, model)
+        trained_model_variants.append((variant, information_gain))
+
+    return get_best_model(trained_model_variants)
