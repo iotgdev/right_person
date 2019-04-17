@@ -69,7 +69,7 @@ def get_model_variant_training_function(models, cross_validation_folds):
 
         training_profiles, training_labels = zip(*training_data)
 
-        seed = model_variant_index % cross_validation_folds
+        seed = int(model_variant_index / cross_validation_folds)
         model = models[model_variant_index]
 
         shuffled_profiles, shuffled_labels = get_shuffled_training_data(training_profiles, training_labels, seed)
