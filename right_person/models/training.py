@@ -12,7 +12,7 @@ from itertools import repeat
 from right_person.ml_utils.data.transformations import filter_profiles, sample_profiles, map_profiles, \
     count_profiles, union_profiles, collect_profiles
 from right_person.ml_utils.cross_validation import get_candidate_models
-from right_person.ml_utils.evaluation import TRAIN_TEST_RATIO, get_information_gain, get_best_model
+from right_person.ml_utils.evaluation import TRAIN_TEST_RATIO, get_information_gain
 
 logger = logging.getLogger('right_person.machine_learning.training')
 
@@ -76,11 +76,18 @@ def get_optimised_model(labelled_good, labelled_normal, model, cross_validation_
 
     training_data = collect_profiles(union_profiles(labelled_good, labelled_normal))  # MAX 200K
 
-    model_variants = [
+    model_variants = (
         m for cv_model in repeat(model, cross_validation_folds) for m in get_candidate_models(cv_model, hyperparameters)
-    ]
+    )
 
-    trained_model_variants = []
+    # TODO: Darren makes excellent points:
+    # TODO: - we should be averaging the information gain across the hyperparameters
+    # TODO:       to find the best value to remove issues with the cross validation folds.
+    # TODO: - Once we have the best factor we should take the best model from that set of machine_learning.
+    # TODO:       this will reduce the risk that an extraneous model becomes the best
+
+    best_information_gain = float('-inf')
+    best_variant = None
 
     for model_variant_index, variant in enumerate(model_variants):
 
@@ -88,6 +95,8 @@ def get_optimised_model(labelled_good, labelled_normal, model, cross_validation_
 
         shuffled_profiles, shuffled_labels = get_shuffled_training_data(training_data, seed, model)
         information_gain = get_information_gain(shuffled_profiles, shuffled_labels, model)
-        trained_model_variants.append((variant, information_gain))
+        if information_gain > best_information_gain:
+            best_information_gain = information_gain
+            best_variant = variant
 
-    return get_best_model(trained_model_variants)
+    return best_variant

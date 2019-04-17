@@ -15,7 +15,7 @@ def get_hyperparameter_combinations(hyperparams):
     :return: a list of hyperparameter names and a list of the hyperparameter combinations
     """
     hyperparam_names = sorted(hyperparams.keys())
-    return hyperparam_names, list(product(*[hyperparams[h] for h in hyperparams]))
+    return hyperparam_names, list(product(*[hyperparams[h] for h in hyperparam_names]))
 
 
 def get_candidate_models(model, hyperparameters):
@@ -25,13 +25,12 @@ def get_candidate_models(model, hyperparameters):
     :type hyperparameters: dict[str, list[float]]
     :rtype: list[RightPersonModel]
     """
-    models = []
     hyperparam_names, model_combinations = get_hyperparameter_combinations(hyperparameters)
 
     for candidate_attributes in model_combinations:
         candidate = copy.deepcopy(model)
         for attr_name, attr_value in zip(hyperparam_names, candidate_attributes):
             setattr(candidate, attr_name, attr_value)
-        models.append(candidate)
-
-    return models or [model]
+        yield candidate
+    else:
+        yield model

@@ -50,30 +50,3 @@ def get_information_gain(data, labels, model):
     predictions = [model.predict(profile) for profile in test_data]
 
     return 1 - log_loss(predictions, labels[:num_training_sets], mean(labels))
-
-
-def get_best_model(model_scores):  # todo: refactor so only a list of models gets passed in, this is a stupid function
-    """
-    finds the best model given various hyperparameter blends and cross validation folds
-    :param list[tuple[RightPersonModel, float]] model_scores: a list of right person model variants and their
-        information gain scores
-    :rtype: RightPersonModel
-    :returns: the best machine_learning according to the log loss function
-    """
-
-    # TODO: Darren makes excellent points:
-    # TODO: - we should be averaging the information gain across the hyperparameters
-    # TODO:       to find the best value to remove issues with the cross validation folds.
-    # TODO: - Once we have the best factor we should take the best model from that set of machine_learning.
-    # TODO:       this will reduce the risk that an extraneous model becomes the best
-
-    best_information_gain = float('-inf')
-    best_model = None
-
-    for model, information_gain in model_scores:
-
-        if information_gain > best_information_gain:
-            best_information_gain = information_gain
-            best_model = model
-
-    return best_model
