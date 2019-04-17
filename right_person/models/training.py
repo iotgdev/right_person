@@ -52,8 +52,11 @@ def get_shuffled_training_data(training_data, seed, model):
     """shuffles training data for cross validation"""
 
     good_limit = model.audience_good_size / 2
+    training_sample = int(len(training_data) * TRAIN_TEST_RATIO)
 
-    while list(zip(*training_data))[1][:int(len(training_data) * TRAIN_TEST_RATIO)].count(1) > good_limit:
+    random.Random(seed).shuffle(training_data)
+
+    while list(zip(*training_data))[1][:training_sample].count(1) < good_limit:
         random.Random(seed).shuffle(training_data)
 
     return list(zip(*training_data))
