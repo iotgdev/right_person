@@ -50,7 +50,7 @@ PYTHON_DEPENDENCIES = [
 
 PACKAGE_DEPENDENCIES = [
     'future',
-    'boto3>=1.9.123,<1.9.153',
+    'boto3>=1.9.123',
     'mmh3',
     'numpy',
     'requests',
@@ -60,6 +60,7 @@ PACKAGE_DEPENDENCIES = [
     'six',
     'ioteclabs-wrapper',
     'retrying',
+    'urllib3<1.25'
 ]
 
 NAME_FORMAT = 'SPARK_DATA_MINER-{}'
