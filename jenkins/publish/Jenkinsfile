@@ -1,0 +1,102 @@
+def result = ''
+def PRE_RELEASES = ''
+
+@NonCPS
+def loop_of_sh(list) {
+    list.each { item ->
+        sh(""". ${WORKSPACE}/.venv/bin/activate;
+        git checkout $item;
+        s3pypi --bucket pypi.dsp.io
+        git tag `echo $item | sed s/-pre//g` $item;
+        git push --delete origin $item;
+        git tag -d $item;
+        git push origin --tags;
+        """)
+    }
+}
+
+pipeline {
+
+    agent any
+
+    environment {
+
+        AWS_DEFAULT_REGION='eu-west-1'
+        AWS_ACCESS_KEY_ID     = credentials('aws_access_key_credentials')
+        AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key_credentials')
+
+    }
+
+    stages {
+
+        stage('Wipe') {
+            steps {
+                script {
+                    deleteDir()
+
+                    try {
+                        dir('./right_person') {
+                            deleteDir()
+                        }
+                    }
+                    catch(Exception ex) {
+                        echo 'could not delete ./right_person'
+                    }
+                }
+            }
+        }
+
+        stage('Checkout repos') {
+            steps {
+
+                sh('mkdir -p ${WORKSPACE}/right_person')
+                dir('./right_person') {
+
+                    checkout([
+                        scm: [
+                            $class: 'GitSCM',
+                            branches: [[name: 'master']],
+                            doGenerateSubmoduleConfigurations: false,
+                            userRemoteConfigs: [[
+                                credentialsId: 'GitSSHCredentials',
+                                url: 'git@github.com:iotgdev/right_person.git'
+                            ]]
+                        ]
+                    ])
+
+                }
+            }
+        }
+
+        stage('Mark Releases') {
+            steps {
+
+                withCredentials([usernamePassword(credentialsId: 'PypiCredentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+
+                    dir('./right_person') {
+
+                        sh("rm -rf ${WORKSPACE}/.venv")
+                        sh("virtualenv -p /usr/bin/python2 ${workspace}/.venv")
+                        sh(". ${WORKSPACE}/.venv/bin/activate && pip install s3pypi")
+
+                        sshagent (credentials: ['GitSSHCredentials']) {
+
+                            sh("git config user.email 'iotgbuildsupport@iotecglobal.com'")
+                            sh("git config user.name 'iotgbuildsupport'")
+
+                            script {
+                                PRE_RELEASES = sh(
+                                    script: "git tag -l | grep pre | sort --version-sort | head -n -1",
+                                    returnStdout: true
+                                ).trim().split('\n')
+                            }
+
+                            loop_of_sh(PRE_RELEASES)
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

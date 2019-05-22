@@ -1,0 +1,110 @@
+def result = ''
+def PACKAGE_VERSION = ''
+
+pipeline {
+
+    agent any
+
+    triggers {
+        pollSCM('*/1 * * * *')
+    }
+
+    stages {
+
+        stage('Wipe') {
+            steps {
+                script {
+                    deleteDir()
+
+                    try {
+                        dir('./right_person') {
+                            deleteDir()
+                        }
+                    }
+                    catch(Exception ex) {
+                        echo 'could not delete ./right_person'
+                    }
+                }
+            }
+        }
+
+        stage('Checkout repos') {
+            steps {
+
+                sh('mkdir -p ${WORKSPACE}/right_person')
+                dir('./right_person') {
+
+                    checkout([
+                        scm: [
+                            $class: 'GitSCM',
+                            branches: [[name: 'master']],
+                            doGenerateSubmoduleConfigurations: false,
+                            userRemoteConfigs: [[
+                                credentialsId: 'GitSSHCredentials',
+                                url: 'git@github.com:iotgdev/right_person.git'
+                            ]]
+                        ]
+                    ])
+
+                }
+            }
+        }
+
+        stage('Run unit tests in python3') {
+            steps {
+
+                dir('./right_person') {
+
+                    sh("rm -rf ${WORKSPACE}/.venv")
+                    sh("virtualenv -p /usr/bin/python3 ${WORKSPACE}/.venv")
+
+                    script {
+                        try {
+                            sh(". ${WORKSPACE}/.venv/bin/activate && python setup.py test -a '--junitxml=test.xml'")
+                        } catch(ex) {
+                            junit("test.xml")
+                            throw ex
+                        }
+                    }
+
+                    junit("test.xml")
+                }
+            }
+        }
+
+        stage('Mark pre release') {
+            steps {
+
+                dir('./right_person') {
+
+                    script {
+                        PACKAGE_VERSION = sh(
+                            script: "python -c 'from version import __version__;print(__version__)'",
+                            returnStdout: true
+                        ).trim()
+                    }
+
+                    sshagent (credentials: ['GitSSHCredentials']) {
+
+                        sh("git config user.email 'iotgbuildsupport@iotecglobal.com'")
+                        sh("git config user.name 'iotgbuildsupport'")
+
+                        script {
+                            try {
+                                sh("git tag -d $PACKAGE_VERSION-pre")
+                                sh("git push --delete origin $PACKAGE_VERSION-pre")
+                            } catch (error) {
+
+                            }
+                        }
+                        sh("git tag -a $PACKAGE_VERSION-pre -m 'pre-release candidate'")
+                        sh("git push origin $PACKAGE_VERSION-pre")
+
+                    }
+                }
+            }
+        }
+    }
+}
+
+
