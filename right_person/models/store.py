@@ -53,6 +53,10 @@ class RightPersonStore(object):
         'goodUsers': 'good_users'
     }
 
+    _file_fields = {
+        'goodUsers': 'good_users'
+    }
+
     def __init__(self):
         """create API session"""
         self.api = LabsRightPersonAPI(dal=get_labs_dal())
@@ -74,7 +78,10 @@ class RightPersonStore(object):
     def _to_model(self, response):
         """converts an api response to a model object"""
         self._format_model_bytes(response)
-        self._format_model_json(response)
+        try:
+            self._format_model_json(response)
+        except ValueError:
+            self._format_model_file(response)
         return RightPersonModel(**{v: response.get(k) for k, v in self.model_fields})
 
     def _format_model_bytes(self, response):
@@ -86,6 +93,16 @@ class RightPersonStore(object):
         for i, j in self._byte_fields.items():
             if self._is_internal_resource(response[i]):
                 response[i] = numpy.frombuffer(self.api.resources.retrieve(model_id, j, **self.params), dtype='<f4')
+
+    def _format_model_file(self, response):
+        """
+        loads a file of lines as a list from response
+        :type response: dict
+        """
+        model_id = response['id']
+        for i, j in self._file_fields.items():
+            if self._is_internal_resource(response[i]):
+                response[i] = {line.strip() for line in self.api.resources.retrieve(model_id, j, **self.params)}
 
     def _format_model_json(self, response):
         """
@@ -105,7 +122,7 @@ class RightPersonStore(object):
         """
         response = {k: getattr(model, v, None) for k, v in self.model_fields}
         self._format_response_bytes(response)
-        self._format_response_json(response)
+        self._format_response_files(response)
         return response
 
     def _format_response_bytes(self, response):
@@ -127,6 +144,16 @@ class RightPersonStore(object):
         for i in self._json_fields:
             response[i] = ujson.dumps(response[i]).encode()
             if isinstance(response[i], str):  # python 2 to 3
+                response[i] = bytes(response[i])
+
+    def _format_response_files(self, response):
+        """
+        formats the file fields for a response
+        :type response: dict
+        """
+        for i in self._file_fields:
+            response[i] = '\n'.join(response[i]).encode()
+            if isinstance(response[i], str):
                 response[i] = bytes(response[i])
 
     def _is_internal_resource(self, value):

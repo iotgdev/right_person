@@ -77,15 +77,34 @@ class ClusterManager(object):
             self.__create_master()
             self.__create_nodes()
 
+    # noinspection PyBroadException
     def destroy(self):
         """destroys the cluster"""
         if self.__registry:
-            self.__destroy_nodes()
-            self.__destroy_master()
-            self.__destroy_security_groups()
-            self.__destroy_instance_profile()
-            self.__destroy_role()
-            self.__destroy_policies()
+            try:
+                self.__destroy_nodes()
+            except Exception:
+                pass
+            try:
+                self.__destroy_master()
+            except Exception:
+                pass
+            try:
+                self.__destroy_security_groups()
+            except Exception:
+                pass
+            try:
+                self.__destroy_instance_profile()
+            except Exception:
+                pass
+            try:
+                self.__destroy_role()
+            except Exception:
+                pass
+            try:
+                self.__destroy_policies()
+            except Exception:
+                pass
 
     def __create_security_groups(self):
         """creates the security groups (with necessary access) for the cluster"""
