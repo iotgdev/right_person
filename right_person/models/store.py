@@ -102,7 +102,7 @@ class RightPersonStore(object):
         model_id = response['id']
         for i, j in self._file_fields.items():
             if self._is_internal_resource(response[i]):
-                file_lines = self.api.resources.retrieve(model_id, j, **self.params).split(bytes('\n'))
+                file_lines = self.api.resources.retrieve(model_id, j, **self.params).split(bytes('\n'.encode('utf-8')))
                 response[i] = {line.strip() for line in file_lines}
 
     def _format_model_json(self, response):
