@@ -195,9 +195,9 @@ class SparkDatasetMiner(object):
         raw_files = session.sparkContext.textFile(record_location)
 
         if self.config.headers:  # todo: abstract to a method
-            header = raw_files.first()
+            header = raw_files.first().strip()
             map_fn = (lambda x: self.create_record(
-                csv.reader([x], delimiter=delimiter).next()) if x != header else (None, None))
+                csv.reader([x], delimiter=delimiter).next()) if header not in x else (None, None))
         else:
             map_fn = (lambda x: self.create_record(csv.reader([x], delimiter=delimiter).next()))
 
