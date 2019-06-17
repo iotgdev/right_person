@@ -72,6 +72,28 @@ pipeline {
             }
         }
 
+        stage('Run unit tests in python2') {
+            steps {
+
+                dir('./right_person') {
+
+                    sh("rm -rf ${WORKSPACE}/.venv")
+                    sh("virtualenv -p /usr/bin/python2 ${WORKSPACE}/.venv")
+
+                    script {
+                        try {
+                            sh(". ${WORKSPACE}/.venv/bin/activate && python setup.py test -a '--junitxml=test.xml'")
+                        } catch(ex) {
+                            junit("test.xml")
+                            throw ex
+                        }
+                    }
+
+                    junit("test.xml")
+                }
+            }
+        }
+
         stage('Mark pre release') {
             steps {
 
