@@ -34,13 +34,13 @@ class RightPersonStore(object):
         'id': 'model_id',
         'account': 'account',
         'name': 'name',
-        'audienceSize': 'audience_size',
-        'goodUsersInAudience': 'audience_good_size',
-        'hashSize': 'hash_size',
+        'audience_size': 'audience_size',
+        'good_users_in_audience': 'audience_good_size',
+        'hash_size': 'hash_size',
         'penalty': 'l2reg',
         'features': 'features',
-        'createdAt': 'created_at',
-        'updatedAt': 'updated_at',
+        'created_at': 'created_at',
+        'updated_at': 'updated_at',
     }
 
     _byte_fields = {
@@ -48,11 +48,11 @@ class RightPersonStore(object):
     }
 
     _json_fields = {
-        'goodUsers': 'good_users'
+        'good_users': 'good_users'
     }
 
     _file_fields = {
-        'goodUsers': 'good_users'
+        'good_users': 'good_users'
     }
 
     def __init__(self):
@@ -129,7 +129,7 @@ class RightPersonStore(object):
         formats the byte fields in a response
         :type response: dict
         """
-        hash_size = response['hashSize']
+        hash_size = response['hash_size']
         for i in self._byte_fields:
             response[i] = struct.pack('<%sf' % hash_size, *response[i].ravel())
             if isinstance(response[i], str):  # python 2 to 3
