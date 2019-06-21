@@ -25,7 +25,7 @@ except ImportError:
     from urlparse import urlparse
 
 
-logger = logging.getLogger('right_person.stores.model_stores')
+logger = logging.getLogger('right_person.models.store')
 
 
 class RightPersonStore(object):

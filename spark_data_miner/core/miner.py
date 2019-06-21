@@ -21,12 +21,16 @@ from __future__ import unicode_literals
 import base64
 import csv
 import datetime
+import logging
 import os
 import posixpath
 import ujson
 from operator import itemgetter
 
 from spark_data_miner.core.utils import get_spark_s3_files, get_s3_connection
+
+
+logger = logging.getLogger('spark_data_miner.core.miner')
 
 
 class SparkDatasetMiner(object):
@@ -223,4 +227,7 @@ class SparkDatasetMiner(object):
         self.run_date = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
         for date in self._dates:
             if not self.dataset_exists(date):
-                self.create_dataset_for_day(session, date)
+                try:
+                    self.create_dataset_for_day(session, date)
+                except (Exception, ):
+                    logger.warning('Could not build dataset {} for date {}'.format(self.config.name, date))

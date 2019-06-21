@@ -14,7 +14,7 @@ from right_person.ml_utils.data.transformations import filter_profiles, sample_p
 from right_person.ml_utils.cross_validation import get_candidate_models
 from right_person.ml_utils.evaluation import TRAIN_TEST_RATIO, get_information_gain
 
-logger = logging.getLogger('right_person.machine_learning.training')
+logger = logging.getLogger('right_person.models.training')
 
 
 def train_model(audience, model, cross_validation_folds=1, hyperparameters=None):
