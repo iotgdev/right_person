@@ -215,9 +215,12 @@ class SparkDatasetMiner(object):
         :type session: pyspark.SparkSession
         """
         for date in self._dates:
-            rdd = session.sparkContext.textFile(self.get_dataset_output_location(date)).map(self.load_record).cache()
-            yield rdd
-            rdd.unpersist()
+            try:
+                rdd = session.sparkContext.textFile(self.get_dataset_output_location(date)).map(self.load_record).cache()
+                yield rdd
+                rdd.unpersist()
+            except (Exception, ):
+                logger.warning('Could not retrieve dataset {} for date {}'.format(self.config.name, date))
 
     def dataset_exists(self, date):
         prefix = self._output_prefixes[date]
